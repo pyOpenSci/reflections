@@ -22,20 +22,23 @@ from ._github import fetch_raw_file
 
 README_FILENAMES = ["README.md", "README.rst", "readme.md", "README"]
 
-_CITATION_HEADING_RE = re.compile(r"\bcit(e|es|ed|ing|ation|ations)\b", re.I)
+_CITATION_HEADING_RE = re.compile(r"\bcit(e|es|ed|ing|ation|ations)\b",
+                                  re.IGNORECASE)
 
 # Headings
 _MD_ATX_RE = re.compile(r"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$")
 _MD_SETEXT_RE = re.compile(r"^\s{0,3}(={2,}|-{2,})\s*$")
 _MD_FENCE_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
-_HTML_HEADING_RE = re.compile(r"^\s*<h([1-6])[^>]*>(.*?)</h\1>", re.I)
+_HTML_HEADING_RE = re.compile(r"^\s*<h([1-6])[^>]*>(.*?)</h\1>", re.IGNORECASE)
 _RST_ADORNMENT_RE = re.compile(r"^([=\-~^*+#\"'`:.])\1{2,}\s*$")
 
 # IDs. Parentheses are allowed in DOIs (some have them) and unbalanced
 # closing ones are trimmed afterwards, e.g. from Markdown links.
-_DOI_RE = re.compile(r"10\.\d{4,9}/[^\s\"'<>\[\]{},;`|]+", re.I)
+_DOI_RE = re.compile(r"10\.\d{4,9}/[^\s\"'<>\[\]{},;`|]+",
+                     re.IGNORECASE)
 _ARXIV_RE = re.compile(
-    r"arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})|arxiv:\s?(\d{4}\.\d{4,5})", re.I
+    r"arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})|arxiv:\s?(\d{4}\.\d{4,5})", 
+    re.IGNORECASE
 )
 _SHIELDS_BADGE_BEFORE_RE = re.compile(r"shields\.io/badge/[^\s/]*-$")
 _ARXIV_DOI_VERSION_RE = re.compile(r"^(10\.48550/arxiv\.\d{4}\.\d{4,5})v\d+$")
