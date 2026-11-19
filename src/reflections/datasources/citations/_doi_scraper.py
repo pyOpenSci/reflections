@@ -1,14 +1,20 @@
-"""Load pyOpenSci package metadata to find DOIs for citation lookups"""
+"""Collect each pyOpenSci package's DOIs for citation lookups
 
+DOIs come from pyOpenSci's packages.yml, the repo's CITATION.cff and the
+hand-curated data/extra_dois.yml. README citation sections are collected
+separately as candidates for manual review.
+"""
+
+import csv
 import re
 import warnings
 
 import requests
 import yaml
 
-from ._cff import get_cff_dois
 from ._doi import bare_doi
 from ._extra_dois import load_extra_dois
+from ._github import get_cff_dois, get_readme_citation_dois
 from ._zenodo import get_zenodo_concept_doi
 
 PACKAGES_URL = (
@@ -24,6 +30,8 @@ _JOSS_RE = re.compile(r"10\.21105/joss\.\d+")
 # They redirect to the DOI of the repo's latest Zenodo release.
 _ZENODO_BADGE_RE = re.compile(r"zenodo\.org/badge/latestdoi/\d+")
 _ZENODO_DOI_RE = re.compile(r"10\.5281/zenodo\.\d+")
+
+REVIEW_COLUMNS = ["package_name", "doi", "kind", "note", "heading", "context"]
 
 
 def load_packages(url: str = PACKAGES_URL) -> list[dict]:
@@ -136,3 +144,57 @@ def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
             "other_dois": other_dois,
         })
     return package_dois
+
+
+# README citation candidates, for manual review -------------------------
+
+
+def _kind(doi: str) -> str:
+    if _ZENODO_DOI_RE.fullmatch(doi):
+        return "zenodo"
+    if _JOSS_RE.fullmatch(doi):
+        return "joss"
+    if doi.startswith("10.48550/arxiv."):
+        return "arxiv"
+    return "other"
+
+
+def get_readme_citations() -> list[dict]:
+    """Return README citation DOIs not already found for each pyOpenSci package
+
+    Each row has package_name, doi, kind (zenodo/joss/arxiv/other), note,
+    heading and context. DOIs already in the package's zenodo_doi, joss_doi
+    or other_dois are left out. note flags Zenodo DOIs that are versions of
+    the package's existing Zenodo record, and Zenodo/JOSS DOIs for packages
+    that have none.
+    """
+    packages = load_packages()
+    rows = []
+    for pkg, dois in zip(packages, get_package_dois(packages)):
+        known = {dois["zenodo_doi"], dois["joss_doi"], *dois["other_dois"]}
+        for found in get_readme_citation_dois(pkg.get("repository_link")):
+            doi = found["doi"]
+            if doi in known:
+                continue
+            kind = _kind(doi)
+            note = ""
+            if kind == "zenodo":
+                if dois["zenodo_doi"] is None:
+                    note = "fills empty zenodo_doi"
+                elif _same_zenodo_record(doi, dois["zenodo_doi"]):
+                    note = "same Zenodo record as zenodo_doi"
+            elif kind == "joss" and dois["joss_doi"] is None:
+                note = "fills empty joss_doi"
+            rows.append({"package_name": dois["package_name"], "kind": kind,
+                         "note": note, **found})
+    return rows
+
+
+def save_readme_citations(path: str = "readme_citation_candidates.csv") -> list[dict]:
+    """Write get_readme_citations() to a CSV for manual review, and return the rows"""
+    rows = get_readme_citations()
+    with open(path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=REVIEW_COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+    return rows
