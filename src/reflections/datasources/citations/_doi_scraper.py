@@ -1,12 +1,14 @@
 """Load pyOpenSci package metadata to find DOIs for citation lookups"""
 
 import re
+import warnings
 
 import requests
 import yaml
 
 from ._cff import get_cff_dois
 from ._doi import bare_doi
+from ._extra_dois import load_extra_dois
 from ._zenodo import get_zenodo_concept_doi
 
 PACKAGES_URL = (
@@ -64,17 +66,20 @@ def _same_zenodo_record(doi_a: str, doi_b: str) -> bool:
     return concept_a is not None and concept_a == get_zenodo_concept_doi(doi_b)
 
 
-def _sort_cff_dois(
-    cff_dois: list[str], zenodo_doi: str | None, joss_doi: str | None
+def _merge_dois(
+    new_dois: list[str],
+    zenodo_doi: str | None,
+    joss_doi: str | None,
+    other_dois: list[str],
 ) -> tuple[str | None, str | None, list[str]]:
-    """Merge CITATION.cff DOIs into a package's Zenodo, JOSS and other DOIs
+    """Merge new DOIs into a package's Zenodo, JOSS and other DOIs
 
     A Zenodo or JOSS DOI fills that slot if it's empty. Otherwise it goes in
     the other DOIs, unless it's the same JOSS paper or a version of the same
     Zenodo record already listed. Any other DOI goes in the other DOIs.
     """
-    other_dois = []
-    for doi in cff_dois:
+    other_dois = list(other_dois)
+    for doi in new_dois:
         if _ZENODO_DOI_RE.fullmatch(doi):
             if zenodo_doi is None:
                 zenodo_doi = doi
@@ -101,18 +106,28 @@ def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
     or JOSS link, come back as None. If "archive" has no Zenodo DOI, a Zenodo
     link in the "joss" field is used instead, since some entries put it there.
 
-    DOIs from the repo's CITATION.cff are then merged in (see _sort_cff_dois):
-    they can fill an empty Zenodo or JOSS DOI, and anything new that isn't a
-    version of the same Zenodo record goes in "other_dois".
+    DOIs from the repo's CITATION.cff, then the hand-curated ones in
+    data/extra_dois.yml, are merged in (see _merge_dois): they can fill an
+    empty Zenodo or JOSS DOI, and anything new that isn't a version of the
+    same Zenodo record goes in "other_dois".
     """
     if packages is None:
         packages = load_packages()
+    extra_dois = load_extra_dois()
+    unknown = set(extra_dois) - {pkg["package_name"] for pkg in packages}
+    if unknown:
+        warnings.warn(
+            f"extra_dois.yml has packages not in packages.yml: {sorted(unknown)}"
+        )
     package_dois = []
     for pkg in packages:
         zenodo_doi = _zenodo_doi(pkg.get("archive")) or _zenodo_doi(pkg.get("joss"))
         joss_doi = _joss_doi(pkg.get("joss"))
-        zenodo_doi, joss_doi, other_dois = _sort_cff_dois(
-            get_cff_dois(pkg.get("repository_link")), zenodo_doi, joss_doi
+        zenodo_doi, joss_doi, other_dois = _merge_dois(
+            get_cff_dois(pkg.get("repository_link")), zenodo_doi, joss_doi, []
+        )
+        zenodo_doi, joss_doi, other_dois = _merge_dois(
+            extra_dois.get(pkg["package_name"], []), zenodo_doi, joss_doi, other_dois
         )
         package_dois.append({
             "package_name": pkg["package_name"],
