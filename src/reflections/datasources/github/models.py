@@ -121,3 +121,27 @@ class IssueSnapshot:
     window_days: int
     issues: tuple[IssueRecord, ...] = field(default_factory=tuple)
     schema_version: int = 1
+
+
+@dataclass(frozen=True)
+class StarHistoryWeek:
+    """Daily star acquisitions for one GitHub calendar week."""
+
+    week_started_at: datetime
+    total: int
+    days: tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class StarSnapshot:
+    """A resumable aggregate repository star-history snapshot."""
+
+    repository: str
+    accepted_at: datetime
+    fetched_at: datetime
+    current_stargazers: int
+    weeks: tuple[StarHistoryWeek, ...] = field(default_factory=tuple)
+    pages_collected: int = 0
+    total_pages: int | None = None
+    complete: bool = False
+    schema_version: int = 1
