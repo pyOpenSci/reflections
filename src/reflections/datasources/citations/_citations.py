@@ -27,9 +27,12 @@ class CitationCount:
         if self.joss_doi:
             joss_stats = get_openalex_stats(self.joss_doi)
             self.stats['joss_citations'] = joss_stats['citations']
+            self.stats['joss_fwci'] = joss_stats['fwci']
 
         if self.other_dois:
             self.stats['other_citations'] = 0
+            self.stats['other_fwci'] = 0
             for doi in self.other_dois:
                 doi_stats = get_openalex_stats(doi)
                 self.stats['other_citations'] += doi_stats['citations']
+                self.stats['other_fwci'] += doi_stats['fwci']
