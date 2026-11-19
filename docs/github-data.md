@@ -1,8 +1,8 @@
 # GitHub data workflows
 
 The GitHub data source maintains independent snapshots for pull-request
-responses and commit activity. Collecting one does not invalidate or repeat
-the other.
+responses, commit activity, and issue timelines. Collecting one does not
+invalidate or repeat the others.
 
 ## Pull-request responses
 
@@ -19,6 +19,22 @@ their `observed_open_days` runs through the snapshot date and
 `resolution_censored` is true. The median-close figure is explicitly limited
 to closed PRs; use the censoring fields for survival analyses that compare all
 PRs.
+
+## Issue response and resolution
+
+```console
+uv run python scripts/collect_issue_activity.py
+uv run python scripts/build_issue_dataset.py
+uv run python scripts/build_issue_figures.py
+```
+
+Issue snapshots are stored in `data/github/issues/`; pull requests returned by
+GitHub's Issues API are excluded. The derived `data/derived/issues.csv` keeps
+separate times for the first maintainer acknowledgement, first triage action,
+first of either ("addressed"), and closure. Acknowledgement means a comment by
+an owner, member, or collaborator. Triage means a label, assignment, milestone,
+or closure action by someone other than the issue author or a bot. Open and
+unaddressed issues remain in the table with censoring fields.
 
 ## Commit activity
 

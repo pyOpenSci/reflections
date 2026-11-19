@@ -1,6 +1,6 @@
 """Tools for reflecting on pyOpenSci package maintenance and adoption."""
 
-from .analysis import write_commit_csv, write_pull_request_csv
+from .analysis import write_commit_csv, write_issue_csv, write_pull_request_csv
 from .datasources.github import (
     collect_commit_snapshot,
     collect_issue_snapshot,
@@ -14,11 +14,20 @@ from .datasources.github import (
     save_issue_snapshot,
     save_snapshot,
 )
-from .metrics import MaintainerResponsePolicy, calculate_first_response_times
+from .metrics import (
+    IssueResponsePolicy,
+    IssueTiming,
+    MaintainerResponsePolicy,
+    calculate_first_response_times,
+    calculate_issue_times,
+)
 
 __all__ = [
     "MaintainerResponsePolicy",
+    "IssueResponsePolicy",
+    "IssueTiming",
     "calculate_first_response_times",
+    "calculate_issue_times",
     "collect_commit_snapshot",
     "collect_issue_snapshot",
     "collect_repository_snapshot",
@@ -32,6 +41,7 @@ __all__ = [
     "save_snapshot",
     "write_pull_request_csv",
     "write_commit_csv",
+    "write_issue_csv",
 ]
 
 
