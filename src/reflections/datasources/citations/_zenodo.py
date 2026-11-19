@@ -4,11 +4,13 @@ import re
 
 import requests
 
+from ._doi import bare_doi
+
 ZENODO_API = "https://zenodo.org/api/records"
 
 def get_zenodo_stats(doi: str) -> dict:
     """Return Zenodo usage stats for a Zenodo DOI (concept or single)."""
-    doi = re.sub(r"^(https?://)?(dx\.)?doi\.org/", "", doi.strip()).lower()
+    doi = bare_doi(doi)
     m = re.fullmatch(r"10\.5281/zenodo\.(\d+)", doi)
 
     if m:

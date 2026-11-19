@@ -1,14 +1,13 @@
 """Get citation count for a DOI with OpenAlex"""
 
-import re
-
 from pyalex import Works
+
+from ._doi import doi_url
 
 
 def get_openalex_stats(doi: str) -> dict:
     """Download citation stats from OpenAlex for a DOI"""
-    https_doi = re.sub(r'^(?:http://)?(?!https://)', 'https://', doi.strip().lower())
-    work = Works()[https_doi]
+    work = Works()[doi_url(doi)]
     return {
         "queried_doi": doi,
         "openalex_id": work["id"],
