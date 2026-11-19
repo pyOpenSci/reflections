@@ -22,6 +22,9 @@ class CitationCount:
 
     def get_stats(self):
         """Download stats from Zenodo and OpenAlex based on provided DOIs"""
+        # OpenAlex works already counted, so the same work isn't counted twice
+        counted_works = set()
+
         if self.zenodo_doi:
             zenodo_stats = get_zenodo_stats(self.zenodo_doi)
             self.stats['zenodo_views'] = zenodo_stats['views']
@@ -29,14 +32,25 @@ class CitationCount:
             zenodo_openalex_stats = get_openalex_stats(self.zenodo_doi)
             self.stats['zenodo_citations'] = zenodo_openalex_stats['citations']
             self.stats['zenodo_fwci'] = zenodo_openalex_stats['fwci']
+            counted_works.add(zenodo_openalex_stats['openalex_id'])
 
         if self.joss_doi:
             joss_stats = get_openalex_stats(self.joss_doi)
             self.stats['joss_citations'] = joss_stats['citations']
             self.stats['joss_fwci'] = joss_stats['fwci']
+            counted_works.add(joss_stats['openalex_id'])
 
         if self.other_dois:
-            other_stats = [get_openalex_stats(doi) for doi in self.other_dois]
+            # OpenAlex merges different DOIs for the same work (e.g. an arXiv
+            # preprint and its journal version), so skip works already counted.
+            # Unindexed DOIs have no OpenAlex ID and are never skipped.
+            other_stats = []
+            for doi in self.other_dois:
+                doi_stats = get_openalex_stats(doi)
+                work = doi_stats['openalex_id']
+                if work is None or work not in counted_works:
+                    other_stats.append(doi_stats)
+                    counted_works.add(work)
             citations = [s['citations'] for s in other_stats if s['citations'] is not None]
             fwcis = [s['fwci'] for s in other_stats if s['fwci'] is not None]
             self.stats['other_citations'] = sum(citations) if citations else None
