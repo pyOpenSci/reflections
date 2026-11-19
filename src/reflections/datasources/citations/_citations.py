@@ -23,6 +23,9 @@ class CitationCount:
             zenodo_stats = get_zenodo_stats(self.zenodo_doi)
             self.stats['zenodo_views'] = zenodo_stats['views']
             self.stats['zenodo_downloads'] = zenodo_stats['downloads']
+            zenodo_openalex_stats = get_openalex_stats(self.zenodo_doi)
+            self.stats['zenodo_citations'] = zenodo_openalex_stats['citations']
+            self.stats['zenodo_fwci'] = zenodo_openalex_stats['fwci']
 
         if self.joss_doi:
             joss_stats = get_openalex_stats(self.joss_doi)
