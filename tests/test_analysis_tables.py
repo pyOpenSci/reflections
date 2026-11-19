@@ -62,6 +62,34 @@ class PullRequestTableTests(unittest.TestCase):
         self.assertIsNone(rows[0]["response_days"])
         self.assertEqual(rows[1]["response_days"], 2.0)
 
+    def test_rows_include_resolution_and_censoring_fields(self):
+        rows = {
+            row["pr_number"]: row
+            for row in pull_request_rows([self.snapshot], window_days=365)
+        }
+
+        merged = rows[1]
+        self.assertEqual(merged["outcome"], "merged")
+        self.assertTrue(merged["is_closed"])
+        self.assertTrue(merged["is_merged"])
+        self.assertEqual(merged["time_to_close_days"], 5.0)
+        self.assertEqual(merged["time_to_merge_days"], 5.0)
+        self.assertEqual(merged["observed_open_days"], 5.0)
+        self.assertFalse(merged["resolution_censored"])
+        self.assertEqual(merged["response_observation_days"], 2.0)
+        self.assertFalse(merged["response_censored"])
+
+        open_pull_request = rows[2]
+        self.assertEqual(open_pull_request["outcome"], "open")
+        self.assertFalse(open_pull_request["is_closed"])
+        self.assertFalse(open_pull_request["is_merged"])
+        self.assertIsNone(open_pull_request["time_to_close_days"])
+        self.assertIsNone(open_pull_request["time_to_merge_days"])
+        self.assertEqual(open_pull_request["observed_open_days"], 334.0)
+        self.assertTrue(open_pull_request["resolution_censored"])
+        self.assertEqual(open_pull_request["response_observation_days"], 334.0)
+        self.assertTrue(open_pull_request["response_censored"])
+
     def test_csv_is_sorted_by_repository_and_pr_number(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / "derived" / "pull_requests.csv"

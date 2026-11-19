@@ -21,11 +21,20 @@ PULL_REQUEST_COLUMNS = (
     "created_at",
     "closed_at",
     "merged_at",
+    "outcome",
+    "is_closed",
+    "is_merged",
+    "time_to_close_days",
+    "time_to_merge_days",
+    "observed_open_days",
+    "resolution_censored",
     "period",
     "days_from_acceptance",
     "within_window",
     "first_response_at",
     "response_days",
+    "response_observation_days",
+    "response_censored",
     "has_response",
 )
 
@@ -58,6 +67,10 @@ def pull_request_rows(
         }
         for pull_request in snapshot.pull_requests:
             response = response_times[pull_request.number]
+            observation_end = pull_request.closed_at or snapshot.fetched_at
+            response_observation_end = (
+                response.first_response_at or pull_request.closed_at or snapshot.fetched_at
+            )
             days_from_acceptance = (
                 pull_request.created_at - snapshot.accepted_at
             ).total_seconds() / 86_400
@@ -74,11 +87,32 @@ def pull_request_rows(
                 "created_at": pull_request.created_at.isoformat(),
                 "closed_at": _optional_datetime(pull_request.closed_at),
                 "merged_at": _optional_datetime(pull_request.merged_at),
+                "outcome": _pull_request_outcome(pull_request),
+                "is_closed": pull_request.closed_at is not None,
+                "is_merged": pull_request.merged_at is not None,
+                "time_to_close_days": _elapsed_days(
+                    pull_request.created_at,
+                    pull_request.closed_at,
+                ),
+                "time_to_merge_days": _elapsed_days(
+                    pull_request.created_at,
+                    pull_request.merged_at,
+                ),
+                "observed_open_days": _elapsed_days(
+                    pull_request.created_at,
+                    observation_end,
+                ),
+                "resolution_censored": pull_request.closed_at is None,
                 "period": response.period,
                 "days_from_acceptance": days_from_acceptance,
                 "within_window": abs(days_from_acceptance) <= window_days,
                 "first_response_at": _optional_datetime(response.first_response_at),
                 "response_days": response.response_days,
+                "response_observation_days": _elapsed_days(
+                    pull_request.created_at,
+                    response_observation_end,
+                ),
+                "response_censored": response.first_response_at is None,
                 "has_response": response.response_days is not None,
             }
 
@@ -107,3 +141,17 @@ def write_pull_request_csv(
 
 def _optional_datetime(value: Any | None) -> str:
     return "" if value is None else value.isoformat()
+
+
+def _elapsed_days(start: Any, end: Any | None) -> float | None:
+    if end is None:
+        return None
+    return (end - start).total_seconds() / 86_400
+
+
+def _pull_request_outcome(pull_request: Any) -> str:
+    if pull_request.merged_at is not None:
+        return "merged"
+    if pull_request.closed_at is not None:
+        return "closed_unmerged"
+    return "open"

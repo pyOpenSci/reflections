@@ -15,6 +15,11 @@ REQUIRED_COLUMNS = {
     "within_window",
     "response_days",
     "has_response",
+    "outcome",
+    "is_closed",
+    "is_merged",
+    "time_to_close_days",
+    "time_to_merge_days",
 }
 
 
@@ -50,6 +55,8 @@ def main() -> int:
     _validate_columns(pull_requests)
     pull_requests["within_window"] = _boolean_column(pull_requests["within_window"])
     pull_requests["has_response"] = _boolean_column(pull_requests["has_response"])
+    pull_requests["is_closed"] = _boolean_column(pull_requests["is_closed"])
+    pull_requests["is_merged"] = _boolean_column(pull_requests["is_merged"])
     matched = pull_requests.loc[pull_requests["within_window"]].copy()
     if matched.empty:
         raise SystemExit("The CSV has no pull requests inside the matched window")
@@ -59,13 +66,14 @@ def main() -> int:
     summary.to_csv(args.output / "package_summary.csv", index=False)
     _plot_cohort_coverage(matched, args.output / "cohort_coverage.png")
     _plot_median_response(summary, args.output / "median_response_dumbbell.png")
+    _plot_median_close(summary, args.output / "median_close_dumbbell.png")
     _plot_cumulative_response(
         matched,
         args.output / "cumulative_response.png",
         horizon_days=args.response_horizon,
     )
     _plot_activity(matched, args.output / "pull_request_activity.png")
-    print(f"Wrote package_summary.csv and 4 figures to {args.output}")
+    print(f"Wrote package_summary.csv and 5 figures to {args.output}")
     return 0
 
 
@@ -76,8 +84,14 @@ def _package_summary(pull_requests: pd.DataFrame) -> pd.DataFrame:
             pull_requests=("repository", "size"),
             responses=("has_response", "sum"),
             response_rate=("has_response", "mean"),
+            closed_pull_requests=("is_closed", "sum"),
+            close_rate=("is_closed", "mean"),
+            merged_pull_requests=("is_merged", "sum"),
+            merge_rate=("is_merged", "mean"),
             median_response_days=("response_days", "median"),
             mean_response_days=("response_days", "mean"),
+            median_close_days=("time_to_close_days", "median"),
+            median_merge_days=("time_to_merge_days", "median"),
         )
         .reset_index()
     )
@@ -155,6 +169,60 @@ def _plot_median_response(summary: pd.DataFrame, path: Path) -> None:
         ax.set_yticks(list(positions), labels=medians.index, fontsize=8)
         ax.set(
             title="Median time to first observed maintainer response",
+            xlabel="Days",
+            ylabel="Repository",
+        )
+        ax.legend()
+    fig.tight_layout()
+    fig.savefig(path, dpi=180)
+    plt.close(fig)
+
+
+def _plot_median_close(summary: pd.DataFrame, path: Path) -> None:
+    """Plot observed close times; open PRs remain represented in the summary."""
+
+    medians = summary.pivot(
+        index="repository",
+        columns="period",
+        values="median_close_days",
+    ).dropna(subset=["before_acceptance", "after_acceptance"], how="any")
+    medians = medians.sort_values("before_acceptance")
+    height = min(30, max(5, 0.35 * len(medians)))
+    fig, ax = plt.subplots(figsize=(10, height))
+    if medians.empty:
+        ax.text(
+            0.5,
+            0.5,
+            "No package has closed PRs in both periods",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
+        ax.set_axis_off()
+    else:
+        for position, (_, values) in enumerate(medians.iterrows()):
+            ax.plot(
+                [values["before_acceptance"], values["after_acceptance"]],
+                [position, position],
+                color="0.75",
+                zorder=1,
+            )
+        positions = range(len(medians))
+        ax.scatter(
+            medians["before_acceptance"],
+            positions,
+            label="before acceptance",
+            zorder=2,
+        )
+        ax.scatter(
+            medians["after_acceptance"],
+            positions,
+            label="after acceptance",
+            zorder=2,
+        )
+        ax.set_yticks(list(positions), labels=medians.index, fontsize=8)
+        ax.set(
+            title="Median time to close among closed pull requests",
             xlabel="Days",
             ylabel="Repository",
         )

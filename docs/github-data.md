@@ -13,7 +13,12 @@ uv run python scripts/build_figures.py
 ```
 
 Pull-request snapshots are stored in `data/github/`. The derived table is
-`data/derived/pull_requests.csv`.
+`data/derived/pull_requests.csv`. It includes first-response time, time to
+close, time to merge, outcome, and censoring fields. Open PRs are retained:
+their `observed_open_days` runs through the snapshot date and
+`resolution_censored` is true. The median-close figure is explicitly limited
+to closed PRs; use the censoring fields for survival analyses that compare all
+PRs.
 
 ## Commit activity
 
