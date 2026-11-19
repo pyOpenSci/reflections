@@ -6,6 +6,7 @@ from .client import (
     SubmissionNotFoundError,
     collect_repository_snapshot,
     create_github,
+    get_accepted_submissions,
     get_submission,
 )
 from .models import PullRequestRecord, RepositorySnapshot, ResponseEvent, Submission
@@ -21,6 +22,7 @@ __all__ = [
     "SubmissionNotFoundError",
     "collect_repository_snapshot",
     "create_github",
+    "get_accepted_submissions",
     "get_submission",
     "load_snapshot",
     "save_snapshot",

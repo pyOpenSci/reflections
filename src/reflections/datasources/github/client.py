@@ -52,11 +52,7 @@ def get_submission(
         raise ValueError("package must not be empty")
 
     client = github or create_github()
-    repository = client.get_repo(submissions_repository)
-    approved_issues = repository.get_issues(
-        state="closed",
-        labels=[APPROVED_LABEL],
-    )
+    approved_issues = _get_approved_issues(client, submissions_repository)
     matches = [
         issue
         for issue in approved_issues
@@ -70,21 +66,30 @@ def get_submission(
             f"found {len(matches)} (issues: {issue_numbers})"
         )
 
-    issue = matches[0]
-    if issue.closed_at is None:
-        raise ValueError(f"Approved issue #{issue.number} has no closure time")
-
-    repository_name = _repository_from_issue_body(
-        issue.body or "",
-        excluded_repository=submissions_repository,
-    )
-    return Submission(
+    return _submission_from_issue(
+        matches[0],
         package=package,
-        repository=repository_name,
-        accepted_at=issue.closed_at,
-        issue_number=issue.number,
-        issue_url=issue.html_url,
-        title=issue.title,
+        submissions_repository=submissions_repository,
+    )
+
+
+def get_accepted_submissions(
+    *,
+    github: Github | None = None,
+    submissions_repository: str = SUBMISSIONS_REPOSITORY,
+) -> tuple[Submission, ...]:
+    """Return every approved pyOpenSci submission in acceptance order."""
+
+    client = github or create_github()
+    submissions = [
+        _submission_from_issue(issue, submissions_repository=submissions_repository)
+        for issue in _get_approved_issues(client, submissions_repository)
+    ]
+    return tuple(
+        sorted(
+            submissions,
+            key=lambda submission: (submission.accepted_at, submission.issue_number),
+        )
     )
 
 
@@ -164,6 +169,37 @@ def _login(user: Any | None) -> str | None:
 
 def _normalize_name(value: str) -> str:
     return "".join(character for character in value.casefold() if character.isalnum())
+
+
+def _get_approved_issues(client: Github, submissions_repository: str) -> Any:
+    repository = client.get_repo(submissions_repository)
+    return repository.get_issues(
+        state="closed",
+        labels=[APPROVED_LABEL],
+    )
+
+
+def _submission_from_issue(
+    issue: Any,
+    *,
+    submissions_repository: str,
+    package: str | None = None,
+) -> Submission:
+    if issue.closed_at is None:
+        raise ValueError(f"Approved issue #{issue.number} has no closure time")
+
+    repository_name = _repository_from_issue_body(
+        issue.body or "",
+        excluded_repository=submissions_repository,
+    )
+    return Submission(
+        package=package or repository_name.rsplit("/", 1)[-1],
+        repository=repository_name,
+        accepted_at=issue.closed_at,
+        issue_number=issue.number,
+        issue_url=issue.html_url,
+        title=issue.title,
+    )
 
 
 def _repository_from_issue_body(body: str, *, excluded_repository: str) -> str:

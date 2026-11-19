@@ -7,6 +7,7 @@ from reflections.datasources.github.client import (
     RepositoryLinkNotFoundError,
     _collect_pull_request,
     _repository_from_issue_body,
+    get_accepted_submissions,
     get_submission,
 )
 
@@ -42,6 +43,34 @@ class GitHubClientTests(unittest.TestCase):
         self.assertEqual(repository.query, {"state": "closed", "labels": [APPROVED_LABEL]})
         self.assertEqual(submission.repository, "SWIFTSIM/swiftgalaxy")
         self.assertEqual(submission.accepted_at, timestamp(4))
+
+    def test_get_accepted_submissions_returns_acceptance_order(self):
+        issues = [
+            SimpleNamespace(
+                title="Submission: newer",
+                number=20,
+                body="Repository: https://github.com/example/newer",
+                closed_at=timestamp(8),
+                html_url="https://github.com/PyOpenSci/software-submission/issues/20",
+            ),
+            SimpleNamespace(
+                title="Submission: older",
+                number=10,
+                body="Repository: https://github.com/example/older",
+                closed_at=timestamp(2),
+                html_url="https://github.com/PyOpenSci/software-submission/issues/10",
+            ),
+        ]
+        repository = FakeRepository(issues)
+        github = SimpleNamespace(get_repo=lambda name: repository)
+
+        submissions = get_accepted_submissions(github=github)
+
+        self.assertEqual(
+            [submission.package for submission in submissions],
+            ["older", "newer"],
+        )
+        self.assertEqual(repository.query, {"state": "closed", "labels": [APPROVED_LABEL]})
 
     def test_repository_parser_ignores_submission_repository(self):
         body = """
