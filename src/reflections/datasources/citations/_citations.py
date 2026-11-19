@@ -1,5 +1,8 @@
 """Get citation, view, and download counts for DOIs associated with pyOS"""
 
+import requests
+
+from ._doi_scraper import get_package_dois
 from ._openalex import get_openalex_stats
 from ._zenodo import get_zenodo_stats
 
@@ -39,3 +42,36 @@ class CitationCount:
                 doi_stats = get_openalex_stats(doi)
                 self.stats['other_citations'] += doi_stats['citations']
                 self.stats['other_fwci'] += doi_stats['fwci']
+
+
+def get_all_citations() -> list[dict]:
+    """Download pyOpenSci's package list and get citation stats for every package"""
+    return _get_citations(get_package_dois())
+
+
+def _get_citations(package_list: list[dict]) -> list[dict]:
+    """Get citation stats for each package in a list from get_package_dois()
+
+    A package whose lookup fails keeps whatever stats were collected before
+    the failure, with the error message under "error".
+    """
+    citation_counts = []
+    for pkg in package_list:
+        citation_count = CitationCount(
+            zenodo_doi=pkg.get("zenodo_doi"),
+            joss_doi=pkg.get("joss_doi"),
+            other_dois=pkg.get("other_dois")
+        )
+        error = None
+        try:
+            citation_count.get_stats()
+        except (requests.RequestException, LookupError) as e:
+            error = f"{type(e).__name__}: {e}"
+        citation_counts.append({
+            "package_name": pkg["package_name"],
+            "zenodo_doi": pkg.get("zenodo_doi"),
+            "joss_doi": pkg.get("joss_doi"),
+            "stats": citation_count.stats,
+            "error": error,
+        })
+    return citation_counts
