@@ -2,12 +2,11 @@
 
 import re
 
-import requests
 import yaml
 
 from ._doi import bare_doi
+from ._github import fetch_raw_file
 
-_GITHUB_REPO_RE = re.compile(r"github\.com/([^/\s]+/[^/\s#?]+)")
 _DOI_RE = re.compile(r"10\.\d{4,9}/\S+")
 
 
@@ -17,19 +16,11 @@ def _load_cff(repository_link: str | None) -> dict | None:
     Returns None if the repo isn't on GitHub, has no CITATION.cff, or the
     file isn't valid YAML.
     """
-    m = _GITHUB_REPO_RE.search(repository_link or "")
-    if not m:
+    fetched = fetch_raw_file(repository_link, ["CITATION.cff"])
+    if fetched is None:
         return None
-    repo = m.group(1).removesuffix(".git")
-    # raw.githubusercontent.com doesn't count against the GitHub API rate limit
-    resp = requests.get(
-        f"https://raw.githubusercontent.com/{repo}/HEAD/CITATION.cff", timeout=30
-    )
-    if resp.status_code == 404:
-        return None
-    resp.raise_for_status()
     try:
-        cff = yaml.safe_load(resp.text)
+        cff = yaml.safe_load(fetched[1])
     except yaml.YAMLError:
         return None
     return cff if isinstance(cff, dict) else None
