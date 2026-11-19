@@ -36,12 +36,11 @@ class CitationCount:
             self.stats['joss_fwci'] = joss_stats['fwci']
 
         if self.other_dois:
-            self.stats['other_citations'] = 0
-            self.stats['other_fwci'] = 0
-            for doi in self.other_dois:
-                doi_stats = get_openalex_stats(doi)
-                self.stats['other_citations'] += doi_stats['citations']
-                self.stats['other_fwci'] += doi_stats['fwci']
+            other_stats = [get_openalex_stats(doi) for doi in self.other_dois]
+            citations = [s['citations'] for s in other_stats if s['citations'] is not None]
+            fwcis = [s['fwci'] for s in other_stats if s['fwci'] is not None]
+            self.stats['other_citations'] = sum(citations) if citations else None
+            self.stats['other_fwci'] = sum(fwcis) / len(fwcis) if fwcis else None
 
 
 def get_all_citations() -> list[dict]:
