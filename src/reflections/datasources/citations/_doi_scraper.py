@@ -58,14 +58,17 @@ def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
     """Return package name, Zenodo DOI and JOSS DOI for each pyOpenSci package
 
     Values that are missing, or that aren't a recognizable Zenodo or JOSS
-    link, come back as None.
+    link, come back as None. If "archive" has no Zenodo DOI, a Zenodo link
+    in the "joss" field is used instead, since some entries put it there.
     """
     if packages is None:
         packages = load_packages()
     return [
         {
             "package_name": pkg["package_name"],
-            "zenodo_doi": _zenodo_doi(pkg.get("archive")),
+            "zenodo_doi": (
+                _zenodo_doi(pkg.get("archive")) or _zenodo_doi(pkg.get("joss"))
+            ),
             "joss_doi": _joss_doi(pkg.get("joss")),
         }
         for pkg in packages
