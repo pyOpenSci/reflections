@@ -2,13 +2,12 @@
 
 import argparse
 from datetime import UTC, datetime
-import os
 from pathlib import Path
 import sys
-import time
 
 from github import RateLimitExceededException
 
+from reflections._cli import ProgressBar, github_token
 from reflections import (
     collect_repository_snapshot,
     get_accepted_submissions,
@@ -57,7 +56,7 @@ def main() -> int:
     if args.window_days <= 0:
         raise SystemExit("--window-days must be positive")
 
-    github = create_github(token=_github_token())
+    github = create_github(token=github_token())
     remaining, limit = github.rate_limiting
     if limit <= 60:
         raise SystemExit(
@@ -104,7 +103,7 @@ def main() -> int:
             f"{prefix}: scanning ±{args.window_days}-day window{resume_note}",
             flush=True,
         )
-        progress = ProgressBar(prefix)
+        progress = ProgressBar(prefix, item_name="PR")
 
         def checkpoint_progress(
             snapshot,
@@ -118,7 +117,7 @@ def main() -> int:
             progress.update(
                 completed,
                 total,
-                pull_request_number=pull_request_number,
+                item_identifier=f"#{pull_request_number}",
                 cached=cached,
                 remaining=github.rate_limiting[0],
             )
@@ -165,85 +164,6 @@ def main() -> int:
 
 def _snapshot_filename(repository: str) -> str:
     return f"{repository.replace('/', '--').casefold()}.json"
-
-
-def _github_token(dotenv_path: Path = Path(".env")) -> str | None:
-    """Read GitHub credentials without exposing or broadly loading .env."""
-
-    token = os.getenv("GITHUB_TOKEN") or os.getenv("github_pat")
-    if token or not dotenv_path.exists():
-        return token
-
-    for raw_line in dotenv_path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.removeprefix("export ").split("=", 1)
-        if key.strip() in {"GITHUB_TOKEN", "github_pat"}:
-            return value.strip().strip("'\"") or None
-    return None
-
-
-class ProgressBar:
-    """A dependency-free terminal progress bar for repository collection."""
-
-    width = 24
-
-    def __init__(self, label: str):
-        self.label = label
-        self.started_at = time.monotonic()
-        self._last_non_terminal_update = 0
-
-    def update(
-        self,
-        current: int,
-        total: int,
-        *,
-        pull_request_number: int,
-        cached: bool,
-        remaining: int,
-    ) -> None:
-        if not sys.stdout.isatty():
-            interval = max(1, total // 20)
-            if current != total and current - self._last_non_terminal_update < interval:
-                return
-            self._last_non_terminal_update = current
-            print(
-                f"{self.label}: PR {current}/{total} "
-                f"(#{pull_request_number}, quota {remaining:,})"
-                + (" [cached]" if cached else ""),
-                flush=True,
-            )
-            return
-
-        fraction = current / total if total else 1
-        filled = round(self.width * fraction)
-        bar = "#" * filled + "-" * (self.width - filled)
-        elapsed = _format_elapsed(time.monotonic() - self.started_at)
-        cached_note = " cached" if cached else ""
-        print(
-            f"\r{self.label} [{bar}] {current}/{total} "
-            f"PR #{pull_request_number}{cached_note} | {elapsed} | quota {remaining:,}",
-            end="",
-            flush=True,
-        )
-
-    def finish(self, pull_request_count: int) -> None:
-        self.finish_message(f"saved {pull_request_count} PRs")
-
-    def finish_message(self, message: str) -> None:
-        if sys.stdout.isatty():
-            print()
-        elapsed = _format_elapsed(time.monotonic() - self.started_at)
-        print(f"{self.label}: {message} in {elapsed}", flush=True)
-
-
-def _format_elapsed(seconds: float) -> str:
-    minutes, whole_seconds = divmod(round(seconds), 60)
-    hours, minutes = divmod(minutes, 60)
-    if hours:
-        return f"{hours:d}:{minutes:02d}:{whole_seconds:02d}"
-    return f"{minutes:02d}:{whole_seconds:02d}"
 
 
 if __name__ == "__main__":
