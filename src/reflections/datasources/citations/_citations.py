@@ -70,6 +70,7 @@ def _get_citations(package_list: list[dict]) -> list[dict]:
             "package_name": pkg["package_name"],
             "zenodo_doi": pkg.get("zenodo_doi"),
             "joss_doi": pkg.get("joss_doi"),
+            "other_dois": pkg.get("other_dois"),
             "stats": citation_count.stats,
             "error": error,
         })

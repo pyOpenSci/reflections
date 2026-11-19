@@ -5,7 +5,9 @@ import re
 import requests
 import yaml
 
+from ._cff import get_cff_dois
 from ._doi import bare_doi
+from ._zenodo import get_zenodo_concept_doi
 
 PACKAGES_URL = (
     "https://raw.githubusercontent.com/pyOpenSci/"
@@ -54,22 +56,68 @@ def _joss_doi(joss: str | None) -> str | None:
     return m.group(0) if m else None
 
 
-def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
-    """Return package name, Zenodo DOI and JOSS DOI for each pyOpenSci package
+def _same_zenodo_record(doi_a: str, doi_b: str) -> bool:
+    """True if two Zenodo DOIs are versions of the same record"""
+    if doi_a == doi_b:
+        return True
+    concept_a = get_zenodo_concept_doi(doi_a)
+    return concept_a is not None and concept_a == get_zenodo_concept_doi(doi_b)
 
-    Values that are missing, or that aren't a recognizable Zenodo or JOSS
-    link, come back as None. If "archive" has no Zenodo DOI, a Zenodo link
-    in the "joss" field is used instead, since some entries put it there.
+
+def _sort_cff_dois(
+    cff_dois: list[str], zenodo_doi: str | None, joss_doi: str | None
+) -> tuple[str | None, str | None, list[str]]:
+    """Merge CITATION.cff DOIs into a package's Zenodo, JOSS and other DOIs
+
+    A Zenodo or JOSS DOI fills that slot if it's empty. Otherwise it goes in
+    the other DOIs, unless it's the same JOSS paper or a version of the same
+    Zenodo record already listed. Any other DOI goes in the other DOIs.
+    """
+    other_dois = []
+    for doi in cff_dois:
+        if _ZENODO_DOI_RE.fullmatch(doi):
+            if zenodo_doi is None:
+                zenodo_doi = doi
+            elif not any(
+                _same_zenodo_record(doi, known)
+                for known in [zenodo_doi] + other_dois
+                if _ZENODO_DOI_RE.fullmatch(known)
+            ):
+                other_dois.append(doi)
+        elif _JOSS_RE.fullmatch(doi):
+            if joss_doi is None:
+                joss_doi = doi
+            elif doi != joss_doi and doi not in other_dois:
+                other_dois.append(doi)
+        elif doi not in other_dois:
+            other_dois.append(doi)
+    return zenodo_doi, joss_doi, other_dois
+
+
+def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
+    """Return package name and Zenodo, JOSS and other DOIs for each pyOpenSci package
+
+    Zenodo and JOSS DOIs that are missing, or that aren't a recognizable Zenodo
+    or JOSS link, come back as None. If "archive" has no Zenodo DOI, a Zenodo
+    link in the "joss" field is used instead, since some entries put it there.
+
+    DOIs from the repo's CITATION.cff are then merged in (see _sort_cff_dois):
+    they can fill an empty Zenodo or JOSS DOI, and anything new that isn't a
+    version of the same Zenodo record goes in "other_dois".
     """
     if packages is None:
         packages = load_packages()
-    return [
-        {
+    package_dois = []
+    for pkg in packages:
+        zenodo_doi = _zenodo_doi(pkg.get("archive")) or _zenodo_doi(pkg.get("joss"))
+        joss_doi = _joss_doi(pkg.get("joss"))
+        zenodo_doi, joss_doi, other_dois = _sort_cff_dois(
+            get_cff_dois(pkg.get("repository_link")), zenodo_doi, joss_doi
+        )
+        package_dois.append({
             "package_name": pkg["package_name"],
-            "zenodo_doi": (
-                _zenodo_doi(pkg.get("archive")) or _zenodo_doi(pkg.get("joss"))
-            ),
-            "joss_doi": _joss_doi(pkg.get("joss")),
-        }
-        for pkg in packages
-    ]
+            "zenodo_doi": zenodo_doi,
+            "joss_doi": joss_doi,
+            "other_dois": other_dois,
+        })
+    return package_dois
