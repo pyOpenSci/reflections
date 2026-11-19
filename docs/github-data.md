@@ -34,7 +34,10 @@ Commit snapshots are stored in `data/github/commits/`. The derived table is
 The initial commit policy is:
 
 - commits reachable from the repository's default branch;
-- a matched 365-day window before and after pyOpenSci acceptance;
+- snapshots retain a matched 365-day window before and after acceptance;
+- the default analysis compares 90 days before with 90 days after acceptance;
+- packages enter that analysis only after 90 post-acceptance days have been
+  observed;
 - committer time determines the before/after period;
 - author time and committer time are both retained;
 - merge commits and bot commits are retained and identified; and

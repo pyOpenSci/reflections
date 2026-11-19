@@ -13,6 +13,7 @@ COMMIT_COLUMNS = (
     "snapshot_fetched_at",
     "snapshot_window_days",
     "analysis_window_days",
+    "post_acceptance_observation_days",
     "accepted_at",
     "sha",
     "url",
@@ -37,14 +38,22 @@ COMMIT_COLUMNS = (
 def commit_rows(
     snapshots: Iterable[CommitSnapshot],
     *,
-    window_days: int = 365,
+    window_days: int = 90,
+    minimum_post_acceptance_days: int = 90,
 ) -> Iterator[dict[str, Any]]:
-    """Yield one analysis-ready row per default-branch commit."""
+    """Yield commits for packages with sufficient post-acceptance follow-up."""
 
     if window_days <= 0:
         raise ValueError("window_days must be positive")
+    if minimum_post_acceptance_days < 0:
+        raise ValueError("minimum_post_acceptance_days must not be negative")
 
     for snapshot in snapshots:
+        observation_days = (
+            snapshot.fetched_at - snapshot.accepted_at
+        ).total_seconds() / 86_400
+        if observation_days < minimum_post_acceptance_days:
+            continue
         if window_days > snapshot.window_days:
             raise ValueError(
                 f"Requested {window_days}-day analysis window exceeds the "
@@ -60,6 +69,7 @@ def commit_rows(
                 "snapshot_fetched_at": snapshot.fetched_at.isoformat(),
                 "snapshot_window_days": snapshot.window_days,
                 "analysis_window_days": window_days,
+                "post_acceptance_observation_days": observation_days,
                 "accepted_at": snapshot.accepted_at.isoformat(),
                 "sha": commit.sha,
                 "url": commit.url,
@@ -89,14 +99,19 @@ def write_commit_csv(
     snapshots: Iterable[CommitSnapshot],
     path: str | Path,
     *,
-    window_days: int = 365,
+    window_days: int = 90,
+    minimum_post_acceptance_days: int = 90,
 ) -> Path:
     """Write a deterministic commit-level CSV from local snapshots."""
 
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     rows = sorted(
-        commit_rows(snapshots, window_days=window_days),
+        commit_rows(
+            snapshots,
+            window_days=window_days,
+            minimum_post_acceptance_days=minimum_post_acceptance_days,
+        ),
         key=lambda row: (
             row["repository"].casefold(),
             row["committed_at"],

@@ -1,7 +1,7 @@
 """Collect default-branch commit snapshots for accepted packages."""
 
 import argparse
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sys
 
@@ -38,6 +38,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="verify authentication and print quota without collecting",
     )
+    parser.add_argument(
+        "--minimum-post-acceptance-days",
+        type=int,
+        default=90,
+        help="skip packages accepted fewer than this many days ago (default: 90)",
+    )
     return parser.parse_args()
 
 
@@ -47,6 +53,8 @@ def main() -> int:
         raise SystemExit("--limit must be positive")
     if args.window_days <= 0:
         raise SystemExit("--window-days must be positive")
+    if args.minimum_post_acceptance_days < 0:
+        raise SystemExit("--minimum-post-acceptance-days must not be negative")
 
     github = create_github(token=github_token())
     remaining, limit = github.rate_limiting
@@ -60,6 +68,21 @@ def main() -> int:
         return 0
 
     submissions = get_accepted_submissions(github=github, on_unsupported="warn")
+    eligible_before = datetime.now(UTC) - timedelta(
+        days=args.minimum_post_acceptance_days
+    )
+    eligible_submissions = tuple(
+        submission
+        for submission in submissions
+        if submission.accepted_at <= eligible_before
+    )
+    skipped = len(submissions) - len(eligible_submissions)
+    if skipped:
+        print(
+            f"Skipping {skipped} package(s) with fewer than "
+            f"{args.minimum_post_acceptance_days} post-acceptance days"
+        )
+    submissions = eligible_submissions
     if args.limit is not None:
         submissions = submissions[: args.limit]
 

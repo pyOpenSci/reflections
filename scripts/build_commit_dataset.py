@@ -23,8 +23,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--window-days",
         type=int,
-        default=365,
-        help="matched before/after window in days (default: 365)",
+        default=90,
+        help="matched before/after window in days (default: 90)",
+    )
+    parser.add_argument(
+        "--minimum-post-acceptance-days",
+        type=int,
+        default=90,
+        help="required follow-up before a package is eligible (default: 90)",
     )
     return parser.parse_args()
 
@@ -44,6 +50,7 @@ def main() -> int:
         snapshots,
         args.output,
         window_days=args.window_days,
+        minimum_post_acceptance_days=args.minimum_post_acceptance_days,
     )
     commit_count = sum(len(snapshot.commits) for snapshot in snapshots)
     print(

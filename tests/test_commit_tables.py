@@ -64,6 +64,35 @@ class CommitTableTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exceeds"):
             list(commit_rows([self.snapshot], window_days=366))
 
+    def test_excludes_package_without_three_months_of_follow_up(self):
+        recent_snapshot = CommitSnapshot(
+            repository="example/recent",
+            default_branch="main",
+            accepted_at=ACCEPTED_AT,
+            fetched_at=ACCEPTED_AT + timedelta(days=89),
+            window_days=365,
+            commits=(commit("recent", 20),),
+        )
+
+        self.assertEqual(list(commit_rows([recent_snapshot])), [])
+
+    def test_follow_up_threshold_is_configurable(self):
+        recent_snapshot = CommitSnapshot(
+            repository="example/recent",
+            default_branch="main",
+            accepted_at=ACCEPTED_AT,
+            fetched_at=ACCEPTED_AT + timedelta(days=30),
+            window_days=365,
+            commits=(commit("recent", 20),),
+        )
+
+        rows = list(
+            commit_rows([recent_snapshot], minimum_post_acceptance_days=30)
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["post_acceptance_observation_days"], 30.0)
+
 
 if __name__ == "__main__":
     unittest.main()
