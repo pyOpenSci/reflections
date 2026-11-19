@@ -7,7 +7,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from ._doi import bare_doi
+from ._doi_utils import bare_doi
 
 ZENODO_API = "https://zenodo.org/api/records"
 

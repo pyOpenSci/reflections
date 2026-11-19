@@ -12,8 +12,7 @@ import warnings
 import requests
 import yaml
 
-from ._doi import bare_doi
-from ._extra_dois import load_extra_dois
+from ._doi_utils import bare_doi, load_extra_dois
 from ._github import get_cff_dois, get_readme_citation_dois
 from ._zenodo import get_zenodo_concept_doi
 

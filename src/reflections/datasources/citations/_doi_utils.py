@@ -1,10 +1,21 @@
-"""Load the hand-curated DOIs in data/extra_dois.yml"""
+"""DOI helpers: convert between bare and URL forms, and load curated DOIs"""
 
+import re
 from importlib.resources import files
 
 import yaml
 
-from ._doi import bare_doi
+_PREFIX_RE = re.compile(r"^(?:doi:\s*|(?:https?://)?(?:dx\.)?doi\.org/)", re.IGNORECASE)
+
+
+def bare_doi(doi: str) -> str:
+    """Return a DOI as a lowercase bare identifier, e.g. 10.5281/zenodo.123"""
+    return _PREFIX_RE.sub("", doi.strip()).lower()
+
+
+def doi_url(doi: str) -> str:
+    """Return a DOI as a resolver URL, e.g. https://doi.org/10.5281/zenodo.123"""
+    return f"https://doi.org/{bare_doi(doi)}"
 
 
 def load_extra_dois() -> dict[str, list[str]]:

@@ -13,7 +13,7 @@ from urllib.parse import unquote
 import requests
 import yaml
 
-from ._doi import bare_doi
+from ._doi_utils import bare_doi
 
 _GITHUB_REPO_RE = re.compile(r"github\.com/([^/\s]+/[^/\s#?]+)")
 

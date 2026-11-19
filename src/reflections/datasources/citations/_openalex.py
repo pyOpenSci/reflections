@@ -3,7 +3,7 @@
 import requests
 from pyalex import Works
 
-from ._doi import doi_url
+from ._doi_utils import doi_url
 
 
 def get_openalex_stats(doi: str) -> dict:
