@@ -13,9 +13,14 @@ from .client import (
 )
 from .commits import collect_commit_snapshot
 from .commit_snapshots import load_commit_snapshot, save_commit_snapshot
+from .issues import collect_issue_snapshot
+from .issue_snapshots import load_issue_snapshot, save_issue_snapshot
 from .models import (
     CommitRecord,
     CommitSnapshot,
+    IssueEvent,
+    IssueRecord,
+    IssueSnapshot,
     PullRequestRecord,
     RepositorySnapshot,
     ResponseEvent,
@@ -27,6 +32,9 @@ __all__ = [
     "APPROVED_LABEL",
     "CommitRecord",
     "CommitSnapshot",
+    "IssueEvent",
+    "IssueRecord",
+    "IssueSnapshot",
     "PullRequestRecord",
     "RepositoryLinkNotFoundError",
     "RepositorySnapshot",
@@ -37,11 +45,14 @@ __all__ = [
     "UnsupportedRepositoryWarning",
     "collect_repository_snapshot",
     "collect_commit_snapshot",
+    "collect_issue_snapshot",
     "create_github",
     "get_accepted_submissions",
     "get_submission",
     "load_snapshot",
     "load_commit_snapshot",
+    "load_issue_snapshot",
     "save_commit_snapshot",
+    "save_issue_snapshot",
     "save_snapshot",
 ]

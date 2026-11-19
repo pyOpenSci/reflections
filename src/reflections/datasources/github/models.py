@@ -86,3 +86,38 @@ class CommitSnapshot:
     window_days: int
     commits: tuple[CommitRecord, ...] = field(default_factory=tuple)
     schema_version: int = 1
+
+
+@dataclass(frozen=True)
+class IssueEvent:
+    """A timestamped event from an issue timeline."""
+
+    kind: str
+    created_at: datetime
+    actor_login: str | None
+    actor_association: str | None
+
+
+@dataclass(frozen=True)
+class IssueRecord:
+    """The issue fields needed for response and resolution metrics."""
+
+    number: int
+    title: str
+    url: str
+    author_login: str | None
+    created_at: datetime
+    closed_at: datetime | None
+    events: tuple[IssueEvent, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class IssueSnapshot:
+    """A point-in-time collection of repository issues and timelines."""
+
+    repository: str
+    accepted_at: datetime
+    fetched_at: datetime
+    window_days: int
+    issues: tuple[IssueRecord, ...] = field(default_factory=tuple)
+    schema_version: int = 1
