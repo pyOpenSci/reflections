@@ -1,6 +1,7 @@
 """Get downloads and views from a zenodo DOI"""
 
 import re
+
 import requests
 
 ZENODO_API = "https://zenodo.org/api/records"
