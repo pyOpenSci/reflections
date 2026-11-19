@@ -1,6 +1,11 @@
 """Tools for reflecting on pyOpenSci package maintenance and adoption."""
 
-from .analysis import write_commit_csv, write_issue_csv, write_pull_request_csv
+from .analysis import (
+    write_commit_csv,
+    write_issue_csv,
+    write_pull_request_csv,
+    write_star_csv,
+)
 from .datasources.github import (
     collect_commit_snapshot,
     collect_issue_snapshot,
@@ -48,6 +53,7 @@ __all__ = [
     "write_pull_request_csv",
     "write_commit_csv",
     "write_issue_csv",
+    "write_star_csv",
 ]
 
 

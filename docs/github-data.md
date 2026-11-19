@@ -36,6 +36,22 @@ an owner, member, or collaborator. Triage means a label, assignment, milestone,
 or closure action by someone other than the issue author or a bot. Open and
 unaddressed issues remain in the table with censoring fields.
 
+## Star history
+
+```console
+uv run python scripts/collect_star_history.py
+uv run python scripts/build_star_dataset.py
+uv run python scripts/build_star_figures.py
+```
+
+Aggregate star snapshots are stored in `data/github/stars/`. Collection uses
+GitHub's repository star-history endpoint and does not store stargazer
+identities. `data/derived/stars.csv` expands the weekly response to one row per
+day with new and cumulative star acquisitions. The current star count is also
+retained because historical acquisitions can differ from the current count
+when users remove stars. Collection checkpoints every API page and is safe to
+resume.
+
 ## Commit activity
 
 ```console
