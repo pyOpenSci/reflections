@@ -70,3 +70,53 @@ The test suite uses fixed local objects and does not make GitHub API requests:
 ```console
 uv run python -m unittest discover -s tests -v
 ```
+
+## Analyze the accepted-package cohort
+
+Install the optional plotting dependencies:
+
+```console
+uv sync --extra analysis
+```
+
+Collection is resumable. Existing repository snapshots are skipped unless
+`--refresh` is provided, so rerunning the command does not repeatedly consume
+GitHub API requests:
+
+```console
+uv run python scripts/collect_accepted_packages.py
+```
+
+For an initial rate-limit-friendly trial, collect only the first few accepted
+packages:
+
+```console
+uv run python scripts/collect_accepted_packages.py --limit 5
+```
+
+Build the PR-level analysis table entirely from local snapshots. The default
+matched comparison window is 365 days on either side of acceptance:
+
+```console
+uv run python scripts/build_pr_dataset.py --window-days 365
+```
+
+Once `data/derived/pull_requests.csv` exists, figure generation makes no
+GitHub requests:
+
+```console
+uv run python scripts/build_figures.py
+```
+
+This writes an inspectable `figures/package_summary.csv` and four initial
+figures:
+
+- `cohort_coverage.png`: PR counts before and after acceptance by repository
+- `median_response_dumbbell.png`: package-level median observed response times
+- `cumulative_response.png`: the share of all PRs with a response by each day
+- `pull_request_activity.png`: average monthly PR activity relative to acceptance
+
+Unanswered PRs remain in the denominator of the cumulative-response figure.
+The median-response figure necessarily summarizes only PRs with an observed
+response, which is why the coverage and cumulative figures should be reviewed
+alongside it.
