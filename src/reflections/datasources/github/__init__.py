@@ -11,11 +11,22 @@ from .client import (
     get_accepted_submissions,
     get_submission,
 )
-from .models import PullRequestRecord, RepositorySnapshot, ResponseEvent, Submission
+from .commits import collect_commit_snapshot
+from .commit_snapshots import load_commit_snapshot, save_commit_snapshot
+from .models import (
+    CommitRecord,
+    CommitSnapshot,
+    PullRequestRecord,
+    RepositorySnapshot,
+    ResponseEvent,
+    Submission,
+)
 from .snapshots import load_snapshot, save_snapshot
 
 __all__ = [
     "APPROVED_LABEL",
+    "CommitRecord",
+    "CommitSnapshot",
     "PullRequestRecord",
     "RepositoryLinkNotFoundError",
     "RepositorySnapshot",
@@ -25,9 +36,12 @@ __all__ = [
     "UnsupportedRepositoryHostError",
     "UnsupportedRepositoryWarning",
     "collect_repository_snapshot",
+    "collect_commit_snapshot",
     "create_github",
     "get_accepted_submissions",
     "get_submission",
     "load_snapshot",
+    "load_commit_snapshot",
+    "save_commit_snapshot",
     "save_snapshot",
 ]

@@ -54,3 +54,35 @@ class RepositorySnapshot:
     pull_requests: tuple[PullRequestRecord, ...] = field(default_factory=tuple)
     window_days: int | None = None
     schema_version: int = 2
+
+
+@dataclass(frozen=True)
+class CommitRecord:
+    """A commit reachable from a repository's default branch."""
+
+    sha: str
+    url: str
+    message: str
+    authored_at: datetime | None
+    committed_at: datetime
+    author_login: str | None
+    committer_login: str | None
+    author_name: str | None
+    committer_name: str | None
+    parent_count: int
+    is_merge: bool
+    author_is_bot: bool
+    committer_is_bot: bool
+
+
+@dataclass(frozen=True)
+class CommitSnapshot:
+    """A point-in-time collection of default-branch commits."""
+
+    repository: str
+    default_branch: str
+    accepted_at: datetime
+    fetched_at: datetime
+    window_days: int
+    commits: tuple[CommitRecord, ...] = field(default_factory=tuple)
+    schema_version: int = 1
