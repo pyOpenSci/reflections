@@ -2,6 +2,7 @@ import importlib.util
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from io import StringIO
 import unittest
 from unittest.mock import patch
 
@@ -31,6 +32,25 @@ class GitHubTokenTests(unittest.TestCase):
                 token = COLLECT._github_token(path)
 
         self.assertEqual(token, "environment-token")
+
+
+class ProgressBarTests(unittest.TestCase):
+    def test_non_terminal_progress_reports_counts_and_quota(self):
+        output = StringIO()
+        with patch("sys.stdout", output):
+            progress = COLLECT.ProgressBar("[1/2] example/project")
+            progress.update(
+                1,
+                2,
+                pull_request_number=10,
+                cached=False,
+                remaining=4_900,
+            )
+
+        message = output.getvalue()
+        self.assertIn("PR 1/2", message)
+        self.assertIn("#10", message)
+        self.assertIn("quota 4,900", message)
 
 
 if __name__ == "__main__":

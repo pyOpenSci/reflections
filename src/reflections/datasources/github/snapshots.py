@@ -7,7 +7,8 @@ from typing import Any
 
 from .models import PullRequestRecord, RepositorySnapshot, ResponseEvent
 
-SUPPORTED_SCHEMA_VERSION = 1
+CURRENT_SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSIONS = {1, CURRENT_SCHEMA_VERSION}
 
 
 def save_snapshot(snapshot: RepositorySnapshot, path: str | Path) -> Path:
@@ -15,10 +16,12 @@ def save_snapshot(snapshot: RepositorySnapshot, path: str | Path) -> Path:
 
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(
+    temporary = destination.with_name(f".{destination.name}.tmp")
+    temporary.write_text(
         json.dumps(_snapshot_to_dict(snapshot), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    temporary.replace(destination)
     return destination
 
 
@@ -27,10 +30,10 @@ def load_snapshot(path: str | Path) -> RepositorySnapshot:
 
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     version = data.get("schema_version")
-    if version != SUPPORTED_SCHEMA_VERSION:
+    if version not in SUPPORTED_SCHEMA_VERSIONS:
         raise ValueError(
             f"Unsupported snapshot schema version {version!r}; "
-            f"expected {SUPPORTED_SCHEMA_VERSION}"
+            f"expected one of {sorted(SUPPORTED_SCHEMA_VERSIONS)}"
         )
     return _snapshot_from_dict(data)
 
@@ -41,6 +44,7 @@ def _snapshot_to_dict(snapshot: RepositorySnapshot) -> dict[str, Any]:
         "repository": snapshot.repository,
         "accepted_at": snapshot.accepted_at.isoformat(),
         "fetched_at": snapshot.fetched_at.isoformat(),
+        "window_days": snapshot.window_days,
         "pull_requests": [
             {
                 "number": pull_request.number,
@@ -67,10 +71,11 @@ def _snapshot_to_dict(snapshot: RepositorySnapshot) -> dict[str, Any]:
 
 def _snapshot_from_dict(data: dict[str, Any]) -> RepositorySnapshot:
     return RepositorySnapshot(
-        schema_version=data["schema_version"],
+        schema_version=CURRENT_SCHEMA_VERSION,
         repository=data["repository"],
         accepted_at=datetime.fromisoformat(data["accepted_at"]),
         fetched_at=datetime.fromisoformat(data["fetched_at"]),
+        window_days=data.get("window_days"),
         pull_requests=tuple(
             PullRequestRecord(
                 number=pull_request["number"],

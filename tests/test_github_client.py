@@ -9,9 +9,11 @@ from reflections.datasources.github.client import (
     UnsupportedRepositoryWarning,
     _collect_pull_request,
     _repository_from_issue_body,
+    collect_repository_snapshot,
     get_accepted_submissions,
     get_submission,
 )
+from reflections.datasources.github.models import PullRequestRecord, RepositorySnapshot
 
 
 def timestamp(day: int) -> datetime:
@@ -158,6 +160,85 @@ class GitHubClientTests(unittest.TestCase):
         record = _collect_pull_request(pull_request)
 
         self.assertEqual([event.kind for event in record.responses], ["review", "issue_comment"])
+
+    def test_repository_collection_limits_window_and_resumes_cached_prs(self):
+        calls = []
+
+        def pull_request(number, day):
+            return SimpleNamespace(
+                number=number,
+                title=f"PR {number}",
+                html_url=f"https://github.com/example/project/pull/{number}",
+                user=SimpleNamespace(login="contributor"),
+                created_at=timestamp(day),
+                closed_at=None,
+                merged_at=None,
+                get_issue_comments=lambda: calls.append((number, "issues")) or [],
+                get_review_comments=lambda: calls.append((number, "comments")) or [],
+                get_reviews=lambda: calls.append((number, "reviews")) or [],
+            )
+
+        pulls = [
+            pull_request(1, 1),
+            pull_request(2, 8),
+            pull_request(3, 12),
+            pull_request(4, 20),
+        ]
+        repository = SimpleNamespace(get_pulls=lambda **query: pulls)
+        github = SimpleNamespace(get_repo=lambda name: repository)
+        cached_pull_request = PullRequestRecord(
+            number=2,
+            title="PR 2",
+            url="https://github.com/example/project/pull/2",
+            author_login="contributor",
+            created_at=timestamp(8),
+            closed_at=None,
+            merged_at=None,
+        )
+        checkpoint = RepositorySnapshot(
+            repository="example/project",
+            accepted_at=timestamp(10),
+            fetched_at=timestamp(15),
+            pull_requests=(cached_pull_request,),
+            window_days=3,
+        )
+        progress = []
+
+        snapshot = collect_repository_snapshot(
+            "example/project",
+            accepted_at=timestamp(10),
+            github=github,
+            window_days=3,
+            existing_snapshot=checkpoint,
+            on_progress=lambda snapshot, current, total, number, cached: progress.append(
+                (current, total, number, cached)
+            ),
+        )
+
+        self.assertEqual([item.number for item in snapshot.pull_requests], [2, 3])
+        self.assertEqual(
+            calls,
+            [(3, "issues"), (3, "comments"), (3, "reviews")],
+        )
+        self.assertEqual(progress, [(1, 2, 2, True), (2, 2, 3, False)])
+        self.assertEqual(snapshot.window_days, 3)
+
+    def test_repository_collection_rejects_mismatched_checkpoint(self):
+        checkpoint = RepositorySnapshot(
+            repository="other/project",
+            accepted_at=timestamp(10),
+            fetched_at=timestamp(15),
+            window_days=3,
+        )
+
+        with self.assertRaisesRegex(ValueError, "checkpoint repository"):
+            collect_repository_snapshot(
+                "example/project",
+                accepted_at=timestamp(10),
+                github=SimpleNamespace(),
+                window_days=3,
+                existing_snapshot=checkpoint,
+            )
 
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ PULL_REQUEST_COLUMNS = (
     "repository",
     "package",
     "snapshot_fetched_at",
+    "snapshot_window_days",
     "accepted_at",
     "pr_number",
     "title",
@@ -46,6 +47,11 @@ def pull_request_rows(
         raise ValueError("window_days must be positive")
 
     for snapshot in snapshots:
+        if snapshot.window_days is not None and window_days > snapshot.window_days:
+            raise ValueError(
+                f"Requested {window_days}-day analysis window exceeds the "
+                f"{snapshot.window_days}-day snapshot window for {snapshot.repository}"
+            )
         response_times = {
             result.number: result
             for result in calculate_first_response_times(snapshot, policy=policy)
@@ -59,6 +65,7 @@ def pull_request_rows(
                 "repository": snapshot.repository,
                 "package": snapshot.repository.rsplit("/", 1)[-1],
                 "snapshot_fetched_at": snapshot.fetched_at.isoformat(),
+                "snapshot_window_days": snapshot.window_days,
                 "accepted_at": snapshot.accepted_at.isoformat(),
                 "pr_number": pull_request.number,
                 "title": pull_request.title,

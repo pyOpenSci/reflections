@@ -32,7 +32,11 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    paths = sorted(args.snapshots.glob("*.json"))
+    paths = sorted(
+        path
+        for path in args.snapshots.glob("*.json")
+        if not path.name.endswith(".partial.json")
+    )
     if not paths:
         raise SystemExit(f"No snapshots found in {args.snapshots}")
 

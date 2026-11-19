@@ -52,4 +52,5 @@ class RepositorySnapshot:
     accepted_at: datetime
     fetched_at: datetime
     pull_requests: tuple[PullRequestRecord, ...] = field(default_factory=tuple)
-    schema_version: int = 1
+    window_days: int | None = None
+    schema_version: int = 2

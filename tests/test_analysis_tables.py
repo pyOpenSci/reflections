@@ -77,6 +77,18 @@ class PullRequestTableTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "window_days"):
             list(pull_request_rows([self.snapshot], window_days=0))
 
+    def test_analysis_window_cannot_exceed_snapshot_window(self):
+        limited_snapshot = RepositorySnapshot(
+            repository=self.snapshot.repository,
+            accepted_at=self.snapshot.accepted_at,
+            fetched_at=self.snapshot.fetched_at,
+            pull_requests=self.snapshot.pull_requests,
+            window_days=30,
+        )
+
+        with self.assertRaisesRegex(ValueError, "exceeds"):
+            list(pull_request_rows([limited_snapshot], window_days=31))
+
 
 if __name__ == "__main__":
     unittest.main()

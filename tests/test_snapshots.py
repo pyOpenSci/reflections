@@ -56,6 +56,22 @@ class SnapshotTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Unsupported snapshot"):
                 load_snapshot(path)
 
+    def test_loads_version_one_snapshot_without_a_window(self):
+        data = {
+            "schema_version": 1,
+            "repository": "example/project",
+            "accepted_at": "2025-01-01T00:00:00+00:00",
+            "fetched_at": "2025-02-01T00:00:00+00:00",
+            "pull_requests": [],
+        }
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "snapshot.json"
+            path.write_text(json.dumps(data), encoding="utf-8")
+            snapshot = load_snapshot(path)
+
+        self.assertEqual(snapshot.schema_version, 2)
+        self.assertIsNone(snapshot.window_days)
+
 
 if __name__ == "__main__":
     unittest.main()

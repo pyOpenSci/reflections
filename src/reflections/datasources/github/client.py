@@ -1,6 +1,7 @@
 """Collect normalized pyOpenSci submission and repository data from GitHub."""
 
-from datetime import UTC, datetime
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 import os
 import re
 from typing import Any
@@ -133,25 +134,124 @@ def collect_repository_snapshot(
     *,
     accepted_at: datetime,
     github: Github | None = None,
+    window_days: int | None = None,
+    existing_snapshot: RepositorySnapshot | None = None,
+    on_progress: Callable[[RepositorySnapshot, int, int, int, bool], None]
+    | None = None,
 ) -> RepositorySnapshot:
-    """Collect pull requests and their response events for a repository."""
+    """Collect pull requests and their response events for a repository.
+
+    ``window_days`` limits expensive response hydration to PRs opened within
+    that many days before or after acceptance. An existing partial snapshot
+    can be supplied to resume work. ``on_progress`` is called after every PR
+    with the current snapshot, completed and total counts, PR number, and a
+    flag indicating whether the PR came from the checkpoint.
+    """
+
+    if window_days is not None and window_days <= 0:
+        raise ValueError("window_days must be positive")
+    _validate_existing_snapshot(
+        existing_snapshot,
+        repository=repository,
+        accepted_at=accepted_at,
+        window_days=window_days,
+    )
 
     client = github or create_github()
     github_repository = client.get_repo(repository)
-    pull_requests = tuple(
-        _collect_pull_request(pull_request)
-        for pull_request in github_repository.get_pulls(
-            state="all",
-            sort="created",
-            direction="asc",
-        )
+    candidates = _pull_requests_in_window(
+        github_repository.get_pulls(state="all", sort="created", direction="asc"),
+        accepted_at=accepted_at,
+        window_days=window_days,
     )
+    collected = {
+        pull_request.number: pull_request
+        for pull_request in (
+            existing_snapshot.pull_requests if existing_snapshot is not None else ()
+        )
+    }
+
+    for completed, pull_request in enumerate(candidates, start=1):
+        cached = pull_request.number in collected
+        if not cached:
+            collected[pull_request.number] = _collect_pull_request(pull_request)
+        snapshot = _repository_snapshot(
+            repository,
+            accepted_at=accepted_at,
+            window_days=window_days,
+            pull_requests=collected.values(),
+        )
+        if on_progress is not None:
+            on_progress(
+                snapshot,
+                completed,
+                len(candidates),
+                pull_request.number,
+                cached,
+            )
+
+    return _repository_snapshot(
+        repository,
+        accepted_at=accepted_at,
+        window_days=window_days,
+        pull_requests=collected.values(),
+    )
+
+
+def _pull_requests_in_window(
+    pull_requests: Any,
+    *,
+    accepted_at: datetime,
+    window_days: int | None,
+) -> list[Any]:
+    if window_days is None:
+        return list(pull_requests)
+
+    start = accepted_at - timedelta(days=window_days)
+    end = accepted_at + timedelta(days=window_days)
+    candidates = []
+    for pull_request in pull_requests:
+        if pull_request.created_at < start:
+            continue
+        if pull_request.created_at > end:
+            break
+        candidates.append(pull_request)
+    return candidates
+
+
+def _repository_snapshot(
+    repository: str,
+    *,
+    accepted_at: datetime,
+    window_days: int | None,
+    pull_requests: Any,
+) -> RepositorySnapshot:
     return RepositorySnapshot(
         repository=repository,
         accepted_at=accepted_at,
         fetched_at=datetime.now(UTC),
-        pull_requests=pull_requests,
+        pull_requests=tuple(
+            sorted(pull_requests, key=lambda pull_request: pull_request.created_at)
+        ),
+        window_days=window_days,
     )
+
+
+def _validate_existing_snapshot(
+    snapshot: RepositorySnapshot | None,
+    *,
+    repository: str,
+    accepted_at: datetime,
+    window_days: int | None,
+) -> None:
+    if snapshot is None:
+        return
+    if snapshot.repository.casefold() != repository.casefold():
+        raise ValueError("checkpoint repository does not match collection target")
+    if snapshot.accepted_at != accepted_at:
+        raise ValueError("checkpoint acceptance time does not match collection target")
+    if snapshot.window_days != window_days:
+        raise ValueError("checkpoint window does not match collection window")
 
 
 def _collect_pull_request(pull_request: Any) -> PullRequestRecord:
