@@ -5,6 +5,8 @@ import re
 import requests
 import yaml
 
+from ._doi import bare_doi
+
 PACKAGES_URL = (
     "https://raw.githubusercontent.com/pyOpenSci/"
     "pyopensci.github.io/main/data/packages.yml"
@@ -14,6 +16,10 @@ PACKAGES_URL = (
 # A Zenodo record ID is the same number as its DOI suffix.
 _ZENODO_RE = re.compile(r"zenodo\.org/(?:doi/10\.5281/zenodo\.|records?/)(\d+)")
 _JOSS_RE = re.compile(r"10\.21105/joss\.\d+")
+# zenodo.org/badge/latestdoi/N links use a GitHub repo ID, not a Zenodo record ID.
+# They redirect to the DOI of the repo's latest Zenodo release.
+_ZENODO_BADGE_RE = re.compile(r"zenodo\.org/badge/latestdoi/\d+")
+_ZENODO_DOI_RE = re.compile(r"10\.5281/zenodo\.\d+")
 
 
 def load_packages(url: str = PACKAGES_URL) -> list[dict]:
@@ -25,8 +31,21 @@ def load_packages(url: str = PACKAGES_URL) -> list[dict]:
 
 def _zenodo_doi(archive: str | None) -> str | None:
     """Pull a Zenodo DOI out of an archive URL, or None if there isn't one"""
-    m = _ZENODO_RE.search(archive or "")
-    return f"10.5281/zenodo.{m.group(1)}" if m else None
+    archive = archive or ""
+    m = _ZENODO_RE.search(archive)
+    if m:
+        return f"10.5281/zenodo.{m.group(1)}"
+    if _ZENODO_BADGE_RE.search(archive):
+        return _resolve_zenodo_badge(archive)
+    return None
+
+
+def _resolve_zenodo_badge(badge_url: str) -> str | None:
+    """Follow a Zenodo badge link's redirect to get the DOI it points to"""
+    resp = requests.head(badge_url.strip(), allow_redirects=False, timeout=30)
+    resp.raise_for_status()
+    doi = bare_doi(resp.headers.get("location", ""))
+    return doi if _ZENODO_DOI_RE.fullmatch(doi) else None
 
 
 def _joss_doi(joss: str | None) -> str | None:
