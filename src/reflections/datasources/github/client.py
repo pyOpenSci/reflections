@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 import os
 import re
 from typing import Any
+import warnings
 
 from github import Auth, Github
 
@@ -16,6 +17,10 @@ _GITHUB_REPOSITORY_URL = re.compile(
     r"https?://(?:www\.)?github\.com/([^/\s)>\]]+)/([^/\s#?)>\]]+)",
     flags=re.IGNORECASE,
 )
+_REPOSITORY_FIELD_URL = re.compile(
+    r"^\s*Repository\s+Link:\s*(https?://[^\s)>]+)",
+    flags=re.IGNORECASE | re.MULTILINE,
+)
 
 
 class SubmissionNotFoundError(LookupError):
@@ -24,6 +29,14 @@ class SubmissionNotFoundError(LookupError):
 
 class RepositoryLinkNotFoundError(ValueError):
     """Raised when a submission does not contain a usable repository URL."""
+
+
+class UnsupportedRepositoryHostError(ValueError):
+    """Raised when a submission repository is not hosted on GitHub."""
+
+
+class UnsupportedRepositoryWarning(UserWarning):
+    """Warn that a submission cannot be collected by the GitHub data source."""
 
 
 def create_github(token: str | None = None) -> Github:
@@ -77,14 +90,36 @@ def get_accepted_submissions(
     *,
     github: Github | None = None,
     submissions_repository: str = SUBMISSIONS_REPOSITORY,
+    on_unsupported: str = "raise",
 ) -> tuple[Submission, ...]:
-    """Return every approved pyOpenSci submission in acceptance order."""
+    """Return approved GitHub-hosted submissions in acceptance order.
+
+    Set ``on_unsupported="warn"`` for batch collection to report and skip
+    submissions hosted elsewhere. The default remains strict so callers do
+    not unknowingly analyze an incomplete cohort.
+    """
+
+    if on_unsupported not in {"raise", "warn"}:
+        raise ValueError("on_unsupported must be 'raise' or 'warn'")
 
     client = github or create_github()
-    submissions = [
-        _submission_from_issue(issue, submissions_repository=submissions_repository)
-        for issue in _get_approved_issues(client, submissions_repository)
-    ]
+    submissions = []
+    for issue in _get_approved_issues(client, submissions_repository):
+        try:
+            submission = _submission_from_issue(
+                issue,
+                submissions_repository=submissions_repository,
+            )
+        except (RepositoryLinkNotFoundError, UnsupportedRepositoryHostError) as error:
+            if on_unsupported == "raise":
+                raise
+            warnings.warn(
+                f"Skipping approved issue #{issue.number} ({issue.title}): {error}",
+                UnsupportedRepositoryWarning,
+                stacklevel=2,
+            )
+            continue
+        submissions.append(submission)
     return tuple(
         sorted(
             submissions,
@@ -210,6 +245,12 @@ def _repository_from_issue_body(body: str, *, excluded_repository: str) -> str:
         if candidate.casefold() != excluded_repository.casefold()
     ]
     if not eligible:
+        repository_field = _REPOSITORY_FIELD_URL.search(body)
+        if repository_field:
+            raise UnsupportedRepositoryHostError(
+                "repository is not hosted on GitHub: "
+                f"{repository_field.group(1).rstrip('.,;')}"
+            )
         raise RepositoryLinkNotFoundError(
             "The approved submission issue does not contain a GitHub repository URL"
         )

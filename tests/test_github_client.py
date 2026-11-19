@@ -5,6 +5,8 @@ import unittest
 from reflections.datasources.github.client import (
     APPROVED_LABEL,
     RepositoryLinkNotFoundError,
+    UnsupportedRepositoryHostError,
+    UnsupportedRepositoryWarning,
     _collect_pull_request,
     _repository_from_issue_body,
     get_accepted_submissions,
@@ -71,6 +73,45 @@ class GitHubClientTests(unittest.TestCase):
             ["older", "newer"],
         )
         self.assertEqual(repository.query, {"state": "closed", "labels": [APPROVED_LABEL]})
+
+    def test_batch_discovery_can_warn_and_skip_non_github_repositories(self):
+        unsupported = SimpleNamespace(
+            title="Submission: elsewhere",
+            number=30,
+            body="Repository Link: https://codeberg.org/example/elsewhere",
+            closed_at=timestamp(9),
+            html_url="https://github.com/PyOpenSci/software-submission/issues/30",
+        )
+        supported = SimpleNamespace(
+            title="Submission: supported",
+            number=31,
+            body="Repository Link: https://github.com/example/supported",
+            closed_at=timestamp(10),
+            html_url="https://github.com/PyOpenSci/software-submission/issues/31",
+        )
+        repository = FakeRepository([unsupported, supported])
+        github = SimpleNamespace(get_repo=lambda name: repository)
+
+        with self.assertWarns(UnsupportedRepositoryWarning):
+            submissions = get_accepted_submissions(
+                github=github,
+                on_unsupported="warn",
+            )
+
+        self.assertEqual([item.repository for item in submissions], ["example/supported"])
+
+    def test_batch_discovery_is_strict_by_default(self):
+        issue = SimpleNamespace(
+            title="Submission: elsewhere",
+            number=30,
+            body="Repository Link: https://bitbucket.org/example/elsewhere",
+            closed_at=timestamp(9),
+            html_url="https://github.com/PyOpenSci/software-submission/issues/30",
+        )
+        github = SimpleNamespace(get_repo=lambda name: FakeRepository([issue]))
+
+        with self.assertRaises(UnsupportedRepositoryHostError):
+            get_accepted_submissions(github=github)
 
     def test_repository_parser_ignores_submission_repository(self):
         body = """

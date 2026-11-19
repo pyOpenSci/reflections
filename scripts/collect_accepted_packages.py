@@ -39,7 +39,7 @@ def main() -> int:
         raise SystemExit("--limit must be positive")
 
     github = create_github()
-    submissions = get_accepted_submissions(github=github)
+    submissions = get_accepted_submissions(github=github, on_unsupported="warn")
     if args.limit is not None:
         submissions = submissions[: args.limit]
 
