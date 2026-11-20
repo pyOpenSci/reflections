@@ -22,6 +22,11 @@ _REPOSITORY_FIELD_URL = re.compile(
     r"^\s*Repository\s+Link:\s*(https?://[^\s)>]+)",
     flags=re.IGNORECASE | re.MULTILINE,
 )
+_MAINTAINERS_FIELD = re.compile(
+    r"^\s*(?:All current maintainers|Maintainers)\s*:\s*(.+)$",
+    flags=re.IGNORECASE | re.MULTILINE,
+)
+_GITHUB_HANDLE = re.compile(r"(?<![\w-])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))")
 
 
 class SubmissionNotFoundError(LookupError):
@@ -334,7 +339,19 @@ def _submission_from_issue(
         issue_number=issue.number,
         issue_url=issue.html_url,
         title=issue.title,
+        maintainers=_maintainers_from_issue_body(issue.body or ""),
     )
+
+
+def _maintainers_from_issue_body(body: str) -> tuple[str, ...]:
+    match = _MAINTAINERS_FIELD.search(body)
+    if match is None:
+        return ()
+    maintainers = []
+    for login in _GITHUB_HANDLE.findall(match.group(1)):
+        if login.casefold() not in {item.casefold() for item in maintainers}:
+            maintainers.append(login)
+    return tuple(maintainers)
 
 
 def _repository_from_issue_body(body: str, *, excluded_repository: str) -> str:

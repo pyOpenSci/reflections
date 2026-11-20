@@ -5,7 +5,7 @@ boundary between the changing GitHub API and the analyses in reflections.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 
 
 @dataclass(frozen=True)
@@ -18,6 +18,7 @@ class Submission:
     issue_number: int
     issue_url: str
     title: str
+    maintainers: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -144,4 +145,40 @@ class StarSnapshot:
     pages_collected: int = 0
     total_pages: int | None = None
     complete: bool = False
+    schema_version: int = 1
+
+
+@dataclass(frozen=True)
+class RepositoryContribution:
+    """Observed public contributions by one maintainer to one repository."""
+
+    repository: str
+    commits: int | None
+    issues: int | None
+    pull_requests: int | None
+    pull_request_reviews: int | None
+
+
+@dataclass(frozen=True)
+class MaintainerActivitySnapshot:
+    """A maintainer's observed GitHub contribution activity in a fixed window."""
+
+    requested_login: str
+    canonical_login: str | None
+    user_exists: bool
+    fetched_at: datetime
+    observation_start: datetime
+    observation_end: datetime
+    total_commits: int
+    total_issues: int
+    total_pull_requests: int
+    total_pull_request_reviews: int
+    restricted_contributions: int
+    last_activity_on: date | None
+    repositories: tuple[RepositoryContribution, ...] = field(default_factory=tuple)
+    commits_truncated: bool = False
+    issues_truncated: bool = False
+    pull_requests_truncated: bool = False
+    pull_request_reviews_truncated: bool = False
+    graphql_rate_remaining: int | None = None
     schema_version: int = 1

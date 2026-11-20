@@ -15,15 +15,24 @@ from .commits import collect_commit_snapshot
 from .commit_snapshots import load_commit_snapshot, save_commit_snapshot
 from .issues import collect_issue_snapshot
 from .issue_snapshots import load_issue_snapshot, save_issue_snapshot
+from .maintainers import collect_maintainer_activity
+from .maintainer_snapshots import (
+    load_maintainer_activity,
+    load_maintainer_roster,
+    save_maintainer_activity,
+    save_maintainer_roster,
+)
 from .models import (
     CommitRecord,
     CommitSnapshot,
     IssueEvent,
     IssueRecord,
     IssueSnapshot,
+    MaintainerActivitySnapshot,
     PullRequestRecord,
     RepositorySnapshot,
     ResponseEvent,
+    RepositoryContribution,
     StarHistoryWeek,
     StarSnapshot,
     Submission,
@@ -39,10 +48,12 @@ __all__ = [
     "IssueEvent",
     "IssueRecord",
     "IssueSnapshot",
+    "MaintainerActivitySnapshot",
     "PullRequestRecord",
     "RepositoryLinkNotFoundError",
     "RepositorySnapshot",
     "ResponseEvent",
+    "RepositoryContribution",
     "StarHistoryWeek",
     "StarSnapshot",
     "Submission",
@@ -52,6 +63,7 @@ __all__ = [
     "collect_repository_snapshot",
     "collect_commit_snapshot",
     "collect_issue_snapshot",
+    "collect_maintainer_activity",
     "collect_star_snapshot",
     "create_github",
     "get_accepted_submissions",
@@ -59,9 +71,13 @@ __all__ = [
     "load_snapshot",
     "load_commit_snapshot",
     "load_issue_snapshot",
+    "load_maintainer_activity",
+    "load_maintainer_roster",
     "load_star_snapshot",
     "save_commit_snapshot",
     "save_issue_snapshot",
+    "save_maintainer_activity",
+    "save_maintainer_roster",
     "save_star_snapshot",
     "save_snapshot",
 ]

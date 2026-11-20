@@ -8,6 +8,7 @@ from reflections.datasources.github.client import (
     UnsupportedRepositoryHostError,
     UnsupportedRepositoryWarning,
     _collect_pull_request,
+    _maintainers_from_issue_body,
     _repository_from_issue_body,
     collect_repository_snapshot,
     get_accepted_submissions,
@@ -31,6 +32,16 @@ class FakeRepository:
 
 
 class GitHubClientTests(unittest.TestCase):
+    def test_parses_submission_maintainer_handles(self):
+        body = "All current maintainers: (@first, Second Person (@second), @first)"
+
+        maintainers = _maintainers_from_issue_body(body)
+
+        self.assertEqual(maintainers, ("first", "second"))
+
+    def test_missing_maintainer_field_is_explicitly_empty(self):
+        self.assertEqual(_maintainers_from_issue_body("Package Name: example"), ())
+
     def test_get_submission_uses_approved_closed_issues(self):
         issue = SimpleNamespace(
             title="Submission: swiftgalaxy",
