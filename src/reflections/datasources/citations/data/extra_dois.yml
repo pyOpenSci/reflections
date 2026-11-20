@@ -1,5 +1,5 @@
 # DOIs curated by hand (mostly from README citation sections), keyed by
-# package_name in pyOpenSci's packages.yml. Merged into get_package_dois()
+# package_name in pyOpenSci's packages.yml. Merged into fetch_package_dois()
 # after packages.yml and CITATION.cff.
 #
 # zenodo_doi / joss_doi fill the package's slot if it's empty.
