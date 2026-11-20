@@ -52,6 +52,28 @@ retained because historical acquisitions can differ from the current count
 when users remove stars. Collection checkpoints every API page and is safe to
 resume.
 
+## Maintainer activity
+
+```console
+uv run python scripts/collect_maintainer_activity.py
+uv run python scripts/build_maintainer_dataset.py
+uv run python scripts/build_maintainer_figures.py
+```
+
+The authoritative review-time roster comes from `All current maintainers` in
+each accepted submission issue. Each unique GitHub account is queried once for
+the most recent fixed 365-day window. Snapshots live in
+`data/github/maintainers/users/`, while `roster.json` preserves the package
+mapping and observation dates so interrupted runs remain reproducible.
+
+The activity table reports public commits, opened issues, opened pull requests,
+and pull-request reviews. It also reports the share associated with the
+accepted package. GitHub only returns repository breakdowns for up to 100
+repositories per contribution type; affected package counts are marked unknown
+and retain a lower bound rather than being recorded as zero. Restricted/private
+contribution counts are retained as a visibility warning and are not treated as
+package inactivity.
+
 ## Commit activity
 
 ```console
