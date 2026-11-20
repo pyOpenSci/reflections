@@ -122,3 +122,13 @@ Before each expensive tier, the collector should print:
 
 No cohort-wide full-history collection should begin until the pilot confirms
 the request estimates and checkpoint behavior.
+
+The bounded issue and pull-request index pilot can be run with:
+
+```bash
+uv run python scripts/collect_history_index.py OWNER/REPOSITORY \
+  --entity both --request-budget 4 --quota-floor 500
+```
+
+The request budget is shared across both indexes. Each completed page is
+written atomically, so rerunning the same command resumes at the next page.

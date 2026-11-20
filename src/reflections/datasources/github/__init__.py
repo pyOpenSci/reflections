@@ -15,6 +15,8 @@ from .cohort import collect_cohort_metadata
 from .cohort_snapshots import load_cohort_metadata, save_cohort_metadata
 from .commit_snapshots import load_commit_snapshot, save_commit_snapshot
 from .commits import collect_commit_snapshot
+from .history_index_snapshots import load_history_index, save_history_index
+from .history_indexes import collect_history_index
 from .issue_snapshots import load_issue_snapshot, save_issue_snapshot
 from .issues import collect_issue_snapshot
 from .maintainer_snapshots import (
@@ -28,6 +30,8 @@ from .models import (
     CohortMetadataSnapshot,
     CommitRecord,
     CommitSnapshot,
+    HistoryIndexRecord,
+    HistoryIndexSnapshot,
     IssueEvent,
     IssueRecord,
     IssueSnapshot,
@@ -49,6 +53,8 @@ __all__ = [
     "CohortMetadataSnapshot",
     "CommitRecord",
     "CommitSnapshot",
+    "HistoryIndexRecord",
+    "HistoryIndexSnapshot",
     "IssueEvent",
     "IssueRecord",
     "IssueSnapshot",
@@ -67,6 +73,7 @@ __all__ = [
     "collect_cohort_metadata",
     "collect_commit_snapshot",
     "collect_issue_snapshot",
+    "collect_history_index",
     "collect_maintainer_activity",
     "collect_repository_snapshot",
     "collect_star_snapshot",
@@ -76,6 +83,7 @@ __all__ = [
     "load_cohort_metadata",
     "load_commit_snapshot",
     "load_issue_snapshot",
+    "load_history_index",
     "load_maintainer_activity",
     "load_maintainer_roster",
     "load_snapshot",
@@ -83,6 +91,7 @@ __all__ = [
     "save_cohort_metadata",
     "save_commit_snapshot",
     "save_issue_snapshot",
+    "save_history_index",
     "save_maintainer_activity",
     "save_maintainer_roster",
     "save_snapshot",

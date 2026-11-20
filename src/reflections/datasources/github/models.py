@@ -145,6 +145,39 @@ class IssueSnapshot:
 
 
 @dataclass(frozen=True)
+class HistoryIndexRecord:
+    """Lightweight issue or pull-request metadata from a list endpoint."""
+
+    number: int
+    title: str
+    url: str
+    author_login: str | None
+    created_at: datetime
+    updated_at: datetime
+    closed_at: datetime | None
+    merged_at: datetime | None
+    state: str
+    comment_count: int
+    review_comment_count: int | None
+    is_draft: bool | None
+
+
+@dataclass(frozen=True)
+class HistoryIndexSnapshot:
+    """A page-checkpointed, unwindowed issue or pull-request index."""
+
+    repository: str
+    entity_type: str
+    fetched_at: datetime
+    records: tuple[HistoryIndexRecord, ...] = field(default_factory=tuple)
+    next_page: int = 1
+    complete: bool = False
+    requests_used: int = 0
+    rate_remaining: int | None = None
+    schema_version: int = 1
+
+
+@dataclass(frozen=True)
 class StarHistoryWeek:
     """Daily star acquisitions for one GitHub calendar week."""
 
