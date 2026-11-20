@@ -86,6 +86,7 @@ def main() -> int:
                 page_number,
                 total_pages,
                 item_identifier=f"{len(snapshot.weeks)} weeks",
+                cached=False,
                 remaining=github.rate_limiting[0],
             )
 

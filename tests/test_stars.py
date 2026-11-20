@@ -134,6 +134,29 @@ class StarCollectionTests(unittest.TestCase):
 
         self.assertEqual(loaded, snapshot)
 
+    def test_complete_checkpoint_does_not_call_github(self):
+        checkpoint = StarSnapshot(
+            repository="example/project",
+            accepted_at=ACCEPTED_AT,
+            fetched_at=datetime(2026, 1, 1, tzinfo=UTC),
+            current_stargazers=12,
+            pages_collected=1,
+            total_pages=1,
+            complete=True,
+        )
+        github = SimpleNamespace(
+            get_repo=lambda name: self.fail("GitHub should not be called")
+        )
+
+        result = collect_star_snapshot(
+            "example/project",
+            accepted_at=ACCEPTED_AT,
+            github=github,
+            existing_snapshot=checkpoint,
+        )
+
+        self.assertIs(result, checkpoint)
+
     def test_week_total_must_match_daily_counts(self):
         requester = FakeRequester(
             {1: [{"week": 1_735_689_600, "total": 2, "days": [1] * 7}]}

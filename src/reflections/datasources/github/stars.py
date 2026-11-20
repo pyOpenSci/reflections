@@ -30,10 +30,11 @@ def collect_star_snapshot(
         repository=repository,
         accepted_at=accepted_at,
     )
-    client = github or create_github()
-    github_repository = client.get_repo(repository)
     if existing_snapshot is not None and existing_snapshot.complete:
         return existing_snapshot
+
+    client = github or create_github()
+    github_repository = client.get_repo(repository)
 
     weeks = {
         week.week_started_at: week
