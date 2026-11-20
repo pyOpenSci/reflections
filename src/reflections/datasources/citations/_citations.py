@@ -4,9 +4,9 @@ import datetime
 
 import requests
 
-from ._doi_scraper import get_package_dois
-from ._openalex import get_citations_before_after, get_openalex_stats
-from ._zenodo import get_zenodo_stats, get_zenodo_versions
+from ._doi_scraper import fetch_package_dois
+from ._openalex import fetch_citations_before_after, fetch_openalex_stats
+from ._zenodo import fetch_zenodo_stats, fetch_zenodo_versions
 
 ZENODO_METRICS = ("views", "downloads", "unique_views", "unique_downloads")
 
@@ -56,20 +56,20 @@ class CitationCount:
         self.date_accepted = date_accepted
         self.stats = {"works": []}
 
-    def _get_openalex_stats(self, doi: str) -> dict:
-        """get_openalex_stats(), plus citations before/after acceptance"""
-        stats = get_openalex_stats(doi)
+    def _fetch_openalex_stats(self, doi: str) -> dict:
+        """fetch_openalex_stats(), plus citations before/after acceptance"""
+        stats = fetch_openalex_stats(doi)
         if self.date_accepted and stats["openalex_id"] is not None:
-            split = get_citations_before_after(stats["openalex_id"], self.date_accepted)
+            split = fetch_citations_before_after(stats["openalex_id"], self.date_accepted)
             stats["citations_before"] = split["before"]
             stats["citations_after"] = split["after"]
         elif self.date_accepted:
             stats["citations_before"] = stats["citations_after"] = None
         return stats
 
-    def _get_zenodo_before_after(self):
+    def _fetch_zenodo_before_after(self):
         """Split Zenodo views/downloads by whether each version predates acceptance"""
-        versions = get_zenodo_versions(self.zenodo_doi)
+        versions = fetch_zenodo_versions(self.zenodo_doi)
         self.stats['zenodo_versions'] = versions
         self.stats['zenodo_first_version_date'] = versions[0]['created'] if versions else None
         before = [v for v in versions if v['created'] < self.date_accepted]
@@ -78,20 +78,20 @@ class CitationCount:
             self.stats[f'zenodo_{metric}_before'] = sum(v[metric] for v in before)
             self.stats[f'zenodo_{metric}_after'] = sum(v[metric] for v in after)
 
-    def get_stats(self):
+    def fetch_stats(self):
         """Download stats from Zenodo and OpenAlex based on provided DOIs"""
         # OpenAlex works already counted, so the same work isn't counted twice
         counted_works = set()
 
         if self.zenodo_doi:
-            zenodo_stats = get_zenodo_stats(self.zenodo_doi)
+            zenodo_stats = fetch_zenodo_stats(self.zenodo_doi)
             self.stats['zenodo_views'] = zenodo_stats['views']
             self.stats['zenodo_downloads'] = zenodo_stats['downloads']
             self.stats['zenodo_unique_views'] = zenodo_stats['unique_views']
             self.stats['zenodo_unique_downloads'] = zenodo_stats['unique_downloads']
             if self.date_accepted:
-                self._get_zenodo_before_after()
-            zenodo_openalex_stats = self._get_openalex_stats(self.zenodo_doi)
+                self._fetch_zenodo_before_after()
+            zenodo_openalex_stats = self._fetch_openalex_stats(self.zenodo_doi)
             self.stats['zenodo_citations'] = zenodo_openalex_stats['citations']
             self.stats['zenodo_citations_by_year'] = zenodo_openalex_stats['citations_by_year']
             self.stats['zenodo_fwci'] = zenodo_openalex_stats['fwci']
@@ -102,7 +102,7 @@ class CitationCount:
             counted_works.add(zenodo_openalex_stats['openalex_id'])
 
         if self.joss_doi:
-            joss_stats = self._get_openalex_stats(self.joss_doi)
+            joss_stats = self._fetch_openalex_stats(self.joss_doi)
             self.stats['joss_citations'] = joss_stats['citations']
             self.stats['joss_citations_by_year'] = joss_stats['citations_by_year']
             self.stats['joss_fwci'] = joss_stats['fwci']
@@ -118,7 +118,7 @@ class CitationCount:
             # Unindexed DOIs have no OpenAlex ID and are never skipped.
             other_stats = []
             for doi in self.other_dois:
-                doi_stats = self._get_openalex_stats(doi)
+                doi_stats = self._fetch_openalex_stats(doi)
                 work = doi_stats['openalex_id']
                 if work is None or work not in counted_works:
                     other_stats.append(doi_stats)
@@ -139,13 +139,13 @@ class CitationCount:
                     [s['citations_after'] for s in other_stats])
 
 
-def get_all_citations() -> list[dict]:
+def fetch_all_citations() -> list[dict]:
     """Download pyOpenSci's package list and get citation stats for every package"""
-    return _get_citations(get_package_dois())
+    return _fetch_citations(fetch_package_dois())
 
 
-def _get_citations(package_list: list[dict]) -> list[dict]:
-    """Get citation stats for each package in a list from get_package_dois()
+def _fetch_citations(package_list: list[dict]) -> list[dict]:
+    """Get citation stats for each package in a list from fetch_package_dois()
 
     A package whose lookup fails keeps whatever stats were collected before
     the failure, with the error message under "error".
@@ -160,7 +160,7 @@ def _get_citations(package_list: list[dict]) -> list[dict]:
         )
         error = None
         try:
-            citation_count.get_stats()
+            citation_count.fetch_stats()
         except (requests.RequestException, LookupError) as e:
             error = f"{type(e).__name__}: {e}"
         citation_counts.append({

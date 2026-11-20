@@ -1,4 +1,4 @@
-"""Journal-style impact metrics for pyOpenSci, computed from get_all_citations()"""
+"""Journal-style impact metrics for pyOpenSci, computed from fetch_all_citations()"""
 
 import datetime
 
@@ -32,7 +32,7 @@ def impact_factors(
                 / number of items published in Y-window .. Y-1
 
     Note:
-        By default an "item" is an OpenAlex work in get_all_citations() output.
+        By default an "item" is an OpenAlex work in fetch_all_citations() output.
         With by_package=True an item is a package instead: its citations are
         the total across all its works, and its publication year is the year
         pyOpenSci accepted it (date_accepted), or the year of its earliest
@@ -42,7 +42,7 @@ def impact_factors(
         out, as are packages with no such works.
 
     Args:
-        citations: output of get_all_citations()
+        citations: output of fetch_all_citations()
         kinds: which works count: any of "joss", "zenodo", "other"
         window: how many earlier publication years count (2 for the standard
             impact factor, 5 for the five-year one)

@@ -15,7 +15,7 @@ if os.environ.get("OPENALEX_API_KEY"):
     pyalex.config.api_key = os.environ["OPENALEX_API_KEY"]
 
 
-def get_openalex_stats(doi: str) -> dict:
+def fetch_openalex_stats(doi: str) -> dict:
     """Download citation stats from OpenAlex for a DOI
 
     If OpenAlex hasn't indexed the DOI, the returned stats are all None
@@ -41,7 +41,7 @@ def get_openalex_stats(doi: str) -> dict:
     }
 
 
-def get_citations_before_after(openalex_id: str, date: str) -> dict:
+def fetch_citations_before_after(openalex_id: str, date: str) -> dict:
     """Count citations to an OpenAlex work published before vs on/after a date
 
     date is YYYY-MM-DD. Uses the citing work's publication date. The two

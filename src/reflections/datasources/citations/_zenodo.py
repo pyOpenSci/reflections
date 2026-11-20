@@ -19,7 +19,7 @@ _session.mount("https://", HTTPAdapter(max_retries=Retry(
 
 
 @functools.cache
-def get_zenodo_concept_doi(doi: str) -> str | None:
+def fetch_zenodo_concept_doi(doi: str) -> str | None:
     """Return the concept DOI (the one covering all versions) for a Zenodo DOI
 
     Returns None if it isn't a 10.5281/zenodo.N DOI or Zenodo has no record
@@ -37,7 +37,7 @@ def get_zenodo_concept_doi(doi: str) -> str | None:
 
 
 @functools.cache
-def _get_record(doi: str) -> dict:
+def _fetch_record(doi: str) -> dict:
     """Return the Zenodo record JSON for a Zenodo DOI (concept or single)"""
     doi = bare_doi(doi)
     m = re.fullmatch(r"10\.5281/zenodo\.(\d+)", doi)
@@ -58,10 +58,10 @@ def _get_record(doi: str) -> dict:
     return rec
 
 
-def get_zenodo_stats(doi: str) -> dict:
+def fetch_zenodo_stats(doi: str) -> dict:
     """Return Zenodo usage stats for a Zenodo DOI (concept or single)."""
     doi = bare_doi(doi)
-    rec = _get_record(doi)
+    rec = _fetch_record(doi)
     s = rec["stats"]
     return {
         "queried_doi": doi,
@@ -75,7 +75,7 @@ def get_zenodo_stats(doi: str) -> dict:
     }
 
 
-def get_zenodo_versions(doi: str) -> list[dict]:
+def fetch_zenodo_versions(doi: str) -> list[dict]:
     """Return per-version Zenodo usage stats for every version of a record
 
     Zenodo's public API has no usage-over-time data, only totals for each
@@ -83,7 +83,7 @@ def get_zenodo_versions(doi: str) -> list[dict]:
     (YYYY-MM-DD, when it was uploaded) and its own views/downloads, oldest
     first.
     """
-    rec = _get_record(doi)
+    rec = _fetch_record(doi)
     concept_id = rec.get("conceptrecid") or rec["id"]
     hits, page = [], 1
     while True:

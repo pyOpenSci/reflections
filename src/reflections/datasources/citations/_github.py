@@ -97,7 +97,7 @@ def _dois_in(entry: dict) -> list:
     return values
 
 
-def get_cff_dois(repository_link: str | None) -> list[str]:
+def fetch_cff_dois(repository_link: str | None) -> list[str]:
     """Return the bare DOIs a repo's CITATION.cff lists for the package itself
 
     Checks the top-level "doi" and "identifiers" fields and the same fields
@@ -257,7 +257,7 @@ def _ids_in_line(line: str) -> list[str]:
     return ids
 
 
-def get_readme_citation_dois(repository_link: str | None) -> list[dict]:
+def fetch_readme_citation_dois(repository_link: str | None) -> list[dict]:
     """Return DOIs found under citation headings in a GitHub repo's README
 
     One dict per unique DOI with "doi", "heading" (the section it was found

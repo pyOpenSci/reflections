@@ -14,8 +14,8 @@ import requests
 import yaml
 
 from ._doi_utils import bare_doi, load_extra_dois
-from ._github import get_cff_dois, get_readme_citation_dois
-from ._zenodo import get_zenodo_concept_doi
+from ._github import fetch_cff_dois, fetch_readme_citation_dois
+from ._zenodo import fetch_zenodo_concept_doi
 
 PACKAGES_URL = (
     "https://raw.githubusercontent.com/pyOpenSci/"
@@ -83,8 +83,8 @@ def _same_zenodo_record(doi_a: str, doi_b: str) -> bool:
     """True if two Zenodo DOIs are versions of the same record"""
     if doi_a == doi_b:
         return True
-    concept_a = get_zenodo_concept_doi(doi_a)
-    return concept_a is not None and concept_a == get_zenodo_concept_doi(doi_b)
+    concept_a = fetch_zenodo_concept_doi(doi_a)
+    return concept_a is not None and concept_a == fetch_zenodo_concept_doi(doi_b)
 
 
 def _merge_dois(
@@ -120,7 +120,7 @@ def _merge_dois(
     return zenodo_doi, joss_doi, other_dois
 
 
-def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
+def fetch_package_dois(packages: list[dict] | None = None) -> list[dict]:
     """Return name, acceptance date, and Zenodo, JOSS and other DOIs for each pyOpenSci package
 
     Zenodo and JOSS DOIs that are missing, or that aren't a recognizable Zenodo
@@ -145,7 +145,7 @@ def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
         zenodo_doi = _zenodo_doi(pkg.get("archive")) or _zenodo_doi(pkg.get("joss"))
         joss_doi = _joss_doi(pkg.get("joss"))
         zenodo_doi, joss_doi, other_dois = _merge_dois(
-            get_cff_dois(pkg.get("repository_link")), zenodo_doi, joss_doi, []
+            fetch_cff_dois(pkg.get("repository_link")), zenodo_doi, joss_doi, []
         )
         zenodo_doi, joss_doi, other_dois = _merge_dois(
             extra_dois.get(pkg.get("package_name"), []), zenodo_doi, joss_doi, other_dois
@@ -174,7 +174,7 @@ def _kind(doi: str) -> str:
     return "other"
 
 
-def get_readme_citations() -> list[dict]:
+def fetch_readme_citations() -> list[dict]:
     """Return README citation DOIs not already found for each pyOpenSci package
 
     Each row has package_name, doi, kind (zenodo/joss/arxiv/other), note,
@@ -185,9 +185,9 @@ def get_readme_citations() -> list[dict]:
     """
     packages = load_packages()
     rows = []
-    for pkg, dois in zip(packages, get_package_dois(packages)):
+    for pkg, dois in zip(packages, fetch_package_dois(packages)):
         known = {dois["zenodo_doi"], dois["joss_doi"], *dois["other_dois"]}
-        for found in get_readme_citation_dois(pkg.get("repository_link")):
+        for found in fetch_readme_citation_dois(pkg.get("repository_link")):
             doi = found["doi"]
             if doi in known:
                 continue
@@ -206,8 +206,8 @@ def get_readme_citations() -> list[dict]:
 
 
 def save_readme_citations(path: str = "readme_citation_candidates.csv") -> list[dict]:
-    """Write get_readme_citations() to a CSV for manual review, and return the rows"""
-    rows = get_readme_citations()
+    """Write fetch_readme_citations() to a CSV for manual review, and return the rows"""
+    rows = fetch_readme_citations()
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=REVIEW_COLUMNS)
         writer.writeheader()
