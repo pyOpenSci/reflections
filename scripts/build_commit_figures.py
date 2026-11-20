@@ -5,8 +5,16 @@ import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 import pandas as pd
+from matplotlib.ticker import FuncFormatter
+
+from reflections.analysis.plotting import (
+    apply_plot_style,
+    plot_change_distribution,
+    plot_monthly_distribution,
+    plot_paged_dumbbells,
+    plot_period_distribution,
+)
 
 REQUIRED_COLUMNS = {
     "repository",
@@ -37,6 +45,12 @@ def parse_args() -> argparse.Namespace:
         help="output directory (default: figures/commits)",
     )
     parser.add_argument(
+        "--cohort-output",
+        type=Path,
+        default=Path("figures/cohort"),
+        help="shared cohort figure directory (default: figures/cohort)",
+    )
+    parser.add_argument(
         "--exclude-merges",
         action="store_true",
         help="exclude commits with multiple parents",
@@ -51,6 +65,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    apply_plot_style()
     commits = pd.read_csv(args.input)
     _validate_columns(commits)
     for column in (
@@ -71,12 +86,43 @@ def main() -> int:
         raise SystemExit("No commits remain after applying the requested filters")
 
     args.output.mkdir(parents=True, exist_ok=True)
+    args.cohort_output.mkdir(parents=True, exist_ok=True)
     summary = _commit_summary(commits)
     summary.to_csv(args.output / "commit_summary.csv", index=False)
-    _plot_coverage(commits, args.output / "commit_coverage.png")
-    _plot_count_dumbbell(summary, args.output / "commit_count_dumbbell.png")
-    _plot_monthly_activity(commits, args.output / "monthly_commit_activity.png")
-    print(f"Wrote commit_summary.csv and 3 figures to {args.output}")
+    plot_period_distribution(
+        summary,
+        value="commits",
+        path=args.cohort_output / "commits_coverage.png",
+        title="Distribution of default-branch commits in matched windows",
+        ylabel="Commits per repository",
+        fill_missing=True,
+    )
+    plot_change_distribution(
+        summary,
+        value="commits",
+        path=args.cohort_output / "commits_change.png",
+        title="Change in default-branch commits after acceptance",
+        xlabel="Change in commits (after − before)",
+        fill_missing=True,
+    )
+    plot_monthly_distribution(
+        commits,
+        path=args.cohort_output / "commits_monthly_activity.png",
+        title="Monthly default-branch commit activity",
+        ylabel="Commits per repository",
+    )
+    plot_paged_dumbbells(
+        summary,
+        value="commits",
+        output_dir=args.output / "appendix",
+        stem="commit_counts",
+        title="Default-branch commits before and after acceptance",
+        xlabel="Commits in matched window",
+        fill_missing=True,
+    )
+    print(
+        f"Wrote commit_summary.csv, 3 cohort figures, and appendix pages to {args.output}"
+    )
     return 0
 
 

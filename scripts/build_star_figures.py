@@ -7,6 +7,15 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from reflections.analysis.plotting import (
+    NEUTRAL_COLOR,
+    apply_plot_style,
+    plot_change_distribution,
+    plot_monthly_distribution,
+    plot_paged_dumbbells,
+    save_figure,
+)
+
 REQUIRED_COLUMNS = {
     "repository",
     "current_stargazers",
@@ -31,11 +40,18 @@ def parse_args() -> argparse.Namespace:
         default=Path("figures/stars"),
         help="figure directory (default: figures/stars)",
     )
+    parser.add_argument(
+        "--cohort-output",
+        type=Path,
+        default=Path("figures/cohort"),
+        help="shared cohort figure directory (default: figures/cohort)",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    apply_plot_style()
     stars = pd.read_csv(args.input)
     _validate_columns(stars)
     stars["within_window"] = _boolean_column(stars["within_window"])
@@ -44,15 +60,35 @@ def main() -> int:
         raise SystemExit("The CSV has no star history inside the matched window")
 
     args.output.mkdir(parents=True, exist_ok=True)
+    args.cohort_output.mkdir(parents=True, exist_ok=True)
     summary = _star_summary(matched)
     summary.to_csv(args.output / "star_summary.csv", index=False)
-    _plot_acquisition_dumbbell(summary, args.output / "star_acquisition_dumbbell.png")
-    _plot_monthly_acquisitions(
-        matched,
-        args.output / "monthly_star_acquisitions.png",
+    plot_change_distribution(
+        summary,
+        value="new_stars",
+        path=args.cohort_output / "stars_acquisition_change.png",
+        title="Change in new stars after acceptance",
+        xlabel="Change in acquired stars (after − before)",
     )
-    _plot_current_stars(stars, args.output / "current_stargazers.png")
-    print(f"Wrote star_summary.csv and 3 figures to {args.output}")
+    plot_monthly_distribution(
+        matched,
+        path=args.cohort_output / "stars_monthly_acquisitions.png",
+        title="Monthly star acquisitions",
+        ylabel="New stars per repository",
+        value_column="new_stars",
+    )
+    _plot_current_stars(stars, args.cohort_output / "stars_current_stargazers.png")
+    plot_paged_dumbbells(
+        summary,
+        value="new_stars",
+        output_dir=args.output / "appendix",
+        stem="star_acquisitions",
+        title="New stars in matched windows around acceptance",
+        xlabel="Star acquisitions",
+    )
+    print(
+        f"Wrote star_summary.csv, 3 cohort figures, and appendix pages to {args.output}"
+    )
     return 0
 
 
@@ -135,23 +171,27 @@ def _plot_monthly_acquisitions(stars: pd.DataFrame, path: Path) -> None:
 
 
 def _plot_current_stars(stars: pd.DataFrame, path: Path) -> None:
-    counts = (
-        stars.groupby("repository")["current_stargazers"]
-        .max()
-        .sort_values()
+    counts = stars.groupby("repository")["current_stargazers"].max().sort_values()
+    fig, (distribution, ranking) = plt.subplots(1, 2, figsize=(11, 5.5))
+    positive = counts.loc[counts > 0]
+    distribution.hist(positive, bins=18, color=NEUTRAL_COLOR, alpha=0.8)
+    distribution.set_xscale("log")
+    distribution.set(
+        title="Cohort distribution",
+        xlabel="Current stars (log scale)",
+        ylabel="Repositories",
     )
-    height = min(30, max(5, 0.28 * len(counts)))
-    fig, ax = plt.subplots(figsize=(9, height))
-    ax.barh(counts.index, counts.values)
-    ax.set(
-        title="Current repository stars at snapshot time",
-        xlabel="Current stars",
-        ylabel="Repository",
-    )
-    ax.tick_params(axis="y", labelsize=8)
+    top = counts.tail(15)
+    ranking.barh(top.index, top.values, color=NEUTRAL_COLOR)
+    ranking.set(title="15 most-starred repositories", xlabel="Current stars")
+    ranking.tick_params(axis="y", labelsize=8)
+    fig.suptitle("Current repository stars at snapshot time")
     fig.tight_layout()
-    fig.savefig(path, dpi=180)
-    plt.close(fig)
+    save_figure(
+        fig,
+        path,
+        "Current repository stars at snapshot time. The left panel shows the cohort distribution on a logarithmic star axis and the right panel shows the 15 most-starred repositories.",
+    )
 
 
 def _validate_columns(dataframe: pd.DataFrame) -> None:

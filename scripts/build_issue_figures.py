@@ -5,8 +5,16 @@ import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 import pandas as pd
+from matplotlib.ticker import FuncFormatter
+
+from reflections.analysis.plotting import (
+    apply_plot_style,
+    plot_change_distribution,
+    plot_monthly_distribution,
+    plot_paged_dumbbells,
+    plot_period_distribution,
+)
 
 REQUIRED_COLUMNS = {
     "repository",
@@ -36,11 +44,18 @@ def parse_args() -> argparse.Namespace:
         default=Path("figures/issues"),
         help="figure directory (default: figures/issues)",
     )
+    parser.add_argument(
+        "--cohort-output",
+        type=Path,
+        default=Path("figures/cohort"),
+        help="shared cohort figure directory (default: figures/cohort)",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    apply_plot_style()
     issues = pd.read_csv(args.input)
     _validate_columns(issues)
     for column in (
@@ -55,25 +70,56 @@ def main() -> int:
         raise SystemExit("The CSV has no issues inside the matched window")
 
     args.output.mkdir(parents=True, exist_ok=True)
+    args.cohort_output.mkdir(parents=True, exist_ok=True)
     summary = _issue_summary(matched)
     summary.to_csv(args.output / "issue_summary.csv", index=False)
-    _plot_coverage(matched, args.output / "issue_coverage.png")
-    _plot_metric_dumbbell(
+    plot_period_distribution(
+        summary,
+        value="issues",
+        path=args.cohort_output / "issues_coverage.png",
+        title="Distribution of issues in matched windows",
+        ylabel="Issues per repository",
+        fill_missing=True,
+    )
+    plot_change_distribution(
         summary,
         value="median_addressed_days",
-        title="Median time until an issue was first addressed",
-        empty_message="No package has addressed issues in both periods",
-        path=args.output / "median_addressed_dumbbell.png",
+        title="Change in median time until issues were addressed",
+        path=args.cohort_output / "issues_median_addressed_change.png",
+        xlabel="Change in days (after − before; lower is faster)",
     )
-    _plot_metric_dumbbell(
+    plot_change_distribution(
         summary,
         value="median_close_days",
-        title="Median time to close among closed issues",
-        empty_message="No package has closed issues in both periods",
-        path=args.output / "median_close_dumbbell.png",
+        title="Change in median issue close time",
+        path=args.cohort_output / "issues_median_close_change.png",
+        xlabel="Change in days (after − before; lower is faster)",
     )
-    _plot_activity(matched, args.output / "monthly_issue_activity.png")
-    print(f"Wrote issue_summary.csv and 4 figures to {args.output}")
+    plot_monthly_distribution(
+        matched,
+        path=args.cohort_output / "issues_monthly_activity.png",
+        title="Monthly issue activity",
+        ylabel="Issues per repository",
+    )
+    for value, stem, title in (
+        (
+            "median_addressed_days",
+            "median_addressed",
+            "Median time until issues were addressed",
+        ),
+        ("median_close_days", "median_close", "Median issue close time"),
+    ):
+        plot_paged_dumbbells(
+            summary,
+            value=value,
+            output_dir=args.output / "appendix",
+            stem=stem,
+            title=title,
+            xlabel="Days",
+        )
+    print(
+        f"Wrote issue_summary.csv, 4 cohort figures, and appendix pages to {args.output}"
+    )
     return 0
 
 

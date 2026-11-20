@@ -5,8 +5,19 @@ import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 import pandas as pd
+from matplotlib.ticker import FuncFormatter
+
+from reflections.analysis.plotting import (
+    AFTER_COLOR,
+    BEFORE_COLOR,
+    apply_plot_style,
+    plot_change_distribution,
+    plot_monthly_distribution,
+    plot_paged_dumbbells,
+    plot_period_distribution,
+    save_figure,
+)
 
 REQUIRED_COLUMNS = {
     "repository",
@@ -34,8 +45,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("figures"),
-        help="figure directory (default: figures)",
+        default=Path("figures/pull_requests"),
+        help="summary and appendix directory (default: figures/pull_requests)",
+    )
+    parser.add_argument(
+        "--cohort-output",
+        type=Path,
+        default=Path("figures/cohort"),
+        help="shared cohort figure directory (default: figures/cohort)",
     )
     parser.add_argument(
         "--response-horizon",
@@ -48,6 +65,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    apply_plot_style()
     if args.response_horizon <= 0:
         raise SystemExit("--response-horizon must be positive")
 
@@ -62,18 +80,61 @@ def main() -> int:
         raise SystemExit("The CSV has no pull requests inside the matched window")
 
     args.output.mkdir(parents=True, exist_ok=True)
+    args.cohort_output.mkdir(parents=True, exist_ok=True)
     summary = _package_summary(matched)
     summary.to_csv(args.output / "package_summary.csv", index=False)
-    _plot_cohort_coverage(matched, args.output / "cohort_coverage.png")
-    _plot_median_response(summary, args.output / "median_response_dumbbell.png")
-    _plot_median_close(summary, args.output / "median_close_dumbbell.png")
+    plot_period_distribution(
+        summary,
+        value="pull_requests",
+        path=args.cohort_output / "pull_requests_coverage.png",
+        title="Distribution of pull requests in matched windows",
+        ylabel="Pull requests per repository",
+        fill_missing=True,
+    )
+    plot_change_distribution(
+        summary,
+        value="median_response_days",
+        path=args.cohort_output / "pull_requests_median_response_change.png",
+        title="Change in median time to first maintainer response",
+        xlabel="Change in days (after − before; lower is faster)",
+    )
+    plot_change_distribution(
+        summary,
+        value="median_close_days",
+        path=args.cohort_output / "pull_requests_median_close_change.png",
+        title="Change in median pull-request close time",
+        xlabel="Change in days (after − before; lower is faster)",
+    )
     _plot_cumulative_response(
         matched,
-        args.output / "cumulative_response.png",
+        args.cohort_output / "pull_requests_cumulative_response.png",
         horizon_days=args.response_horizon,
     )
-    _plot_activity(matched, args.output / "pull_request_activity.png")
-    print(f"Wrote package_summary.csv and 5 figures to {args.output}")
+    plot_monthly_distribution(
+        matched,
+        path=args.cohort_output / "pull_requests_monthly_activity.png",
+        title="Monthly pull-request activity",
+        ylabel="Pull requests per repository",
+    )
+    for value, stem, title in (
+        (
+            "median_response_days",
+            "median_response",
+            "Median time to first maintainer response",
+        ),
+        ("median_close_days", "median_close", "Median pull-request close time"),
+    ):
+        plot_paged_dumbbells(
+            summary,
+            value=value,
+            output_dir=args.output / "appendix",
+            stem=stem,
+            title=title,
+            xlabel="Days",
+        )
+    print(
+        f"Wrote package_summary.csv, 5 cohort figures, and appendix pages to {args.output}"
+    )
     return 0
 
 
@@ -240,7 +301,10 @@ def _plot_cumulative_response(
 ) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
     days = list(range(horizon_days + 1))
-    for period in ("before_acceptance", "after_acceptance"):
+    for period, color, linestyle in (
+        ("before_acceptance", BEFORE_COLOR, "--"),
+        ("after_acceptance", AFTER_COLOR, "-"),
+    ):
         group = pull_requests.loc[pull_requests["period"] == period]
         if group.empty:
             continue
@@ -252,6 +316,8 @@ def _plot_cumulative_response(
             cumulative_share,
             where="post",
             label=period.replace("_", " "),
+            color=color,
+            linestyle=linestyle,
         )
     ax.set(
         title="Cumulative share with an observed maintainer response",
@@ -262,8 +328,11 @@ def _plot_cumulative_response(
     )
     ax.legend()
     fig.tight_layout()
-    fig.savefig(path, dpi=180)
-    plt.close(fig)
+    save_figure(
+        fig,
+        path,
+        f"Cumulative share of pull requests with an observed maintainer response within {horizon_days} days, before and after acceptance.",
+    )
 
 
 def _plot_activity(pull_requests: pd.DataFrame, path: Path) -> None:
