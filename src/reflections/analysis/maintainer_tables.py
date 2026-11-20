@@ -13,7 +13,8 @@ from reflections.datasources.github.models import (
 
 MAINTAINER_COLUMNS = (
     "repository", "package", "accepted_at", "submission_issue_url",
-    "requested_login", "canonical_login", "user_exists", "snapshot_fetched_at",
+    "requested_login", "snapshot_available", "canonical_login", "user_exists",
+    "snapshot_fetched_at",
     "observation_start", "observation_end", "last_activity_on",
     "days_since_last_activity", "has_public_activity", "total_public_commits",
     "total_public_issues", "total_public_pull_requests",
@@ -40,7 +41,8 @@ def maintainer_rows(
         for login in submission.maintainers:
             snapshot = by_login.get(login.casefold())
             if snapshot is None:
-                raise ValueError(f"No activity snapshot found for maintainer @{login}")
+                yield _missing_snapshot_row(submission, login)
+                continue
             repository = _repository_record(snapshot, submission.repository)
             package_counts = {
                 "commits": _package_count(
@@ -74,6 +76,7 @@ def maintainer_rows(
                 "accepted_at": submission.accepted_at.isoformat(),
                 "submission_issue_url": submission.issue_url,
                 "requested_login": snapshot.requested_login,
+                "snapshot_available": True,
                 "canonical_login": snapshot.canonical_login or "",
                 "user_exists": snapshot.user_exists,
                 "snapshot_fetched_at": snapshot.fetched_at.isoformat(),
@@ -118,6 +121,23 @@ def roster_rows(submissions: Iterable[Submission]) -> Iterator[dict[str, Any]]:
             "maintainers": ";".join(submission.maintainers),
             "has_maintainer_roster": bool(submission.maintainers),
         }
+
+
+def _missing_snapshot_row(submission: Submission, login: str) -> dict[str, Any]:
+    row = {column: None for column in MAINTAINER_COLUMNS}
+    row.update(
+        {
+            "repository": submission.repository,
+            "package": submission.package,
+            "accepted_at": submission.accepted_at.isoformat(),
+            "submission_issue_url": submission.issue_url,
+            "requested_login": login,
+            "snapshot_available": False,
+            "canonical_login": "",
+            "package_activity_exact": False,
+        }
+    )
+    return row
 
 
 def write_maintainer_csvs(

@@ -78,9 +78,12 @@ class MaintainerTableTests(unittest.TestCase):
         self.assertFalse(row["has_maintainer_roster"])
         self.assertEqual(row["maintainer_count"], 0)
 
-    def test_missing_user_snapshot_is_an_error(self):
-        with self.assertRaisesRegex(ValueError, "No activity snapshot"):
-            list(maintainer_rows([submission()], []))
+    def test_missing_user_snapshot_is_retained_as_missing_data(self):
+        row = next(maintainer_rows([submission()], []))
+
+        self.assertFalse(row["snapshot_available"])
+        self.assertEqual(row["requested_login"], "maintainer")
+        self.assertIsNone(row["total_observed_public_activity"])
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 
 import argparse
 from pathlib import Path
+import sys
 
 from reflections import (
     load_maintainer_activity,
@@ -27,6 +28,22 @@ def main() -> int:
     if not paths:
         raise SystemExit("No maintainer activity snapshots found")
     snapshots = [load_maintainer_activity(path) for path in paths]
+    available = {item.requested_login.casefold() for item in snapshots}
+    missing = sorted(
+        {
+            login
+            for submission in submissions
+            for login in submission.maintainers
+            if login.casefold() not in available
+        },
+        key=str.casefold,
+    )
+    if missing:
+        print(
+            f"Warning: {len(missing)} maintainer snapshot(s) unavailable: "
+            + ", ".join(f"@{login}" for login in missing),
+            file=sys.stderr,
+        )
     outputs = write_maintainer_csvs(
         submissions, snapshots,
         activity_path=args.activity_output, roster_path=args.roster_output,

@@ -9,6 +9,7 @@ import pandas as pd
 ACTIVITY_COLUMNS = {
     "repository",
     "requested_login",
+    "snapshot_available",
     "user_exists",
     "has_public_activity",
     "days_since_last_activity",
@@ -51,6 +52,7 @@ def main() -> int:
     _validate_columns(activity, ACTIVITY_COLUMNS, "activity")
     _validate_columns(rosters, ROSTER_COLUMNS, "roster")
     for column in (
+        "snapshot_available",
         "user_exists",
         "has_public_activity",
         "has_restricted_contributions",
@@ -78,7 +80,7 @@ def _package_summary(
     observed = (
         activity.groupby("repository", sort=True)
         .agg(
-            activity_rows_collected=("requested_login", "size"),
+            activity_rows_collected=("snapshot_available", "sum"),
             existing_accounts=("user_exists", "sum"),
             active_maintainers=("has_public_activity", "sum"),
             maintainers_with_restricted_activity=(
