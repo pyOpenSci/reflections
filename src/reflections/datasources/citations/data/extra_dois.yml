@@ -53,3 +53,13 @@ phenopype:
   other_dois:
     - doi: "10.1111/2041-210x.13771"
       note: Python pipeline paper (Methods in Ecology and Evolution)
+
+Fluidimage:
+  # Repo is on Heptapod, not GitHub, so CITATION.cff and the README aren't
+  # read automatically.
+  zenodo_doi: "10.5281/zenodo.11359207"
+  other_dois:
+    - doi: "10.5334/jors.237"
+      note: >-
+        FluidDyn metapaper (JORS 2019) the README asks users to cite. Covers the
+        whole FluidDyn project (fluidsim, fluidfft, ...), not just Fluidimage
