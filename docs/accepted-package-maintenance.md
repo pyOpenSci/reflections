@@ -119,9 +119,15 @@ number of default-branch commits decreased from 61 in the 90 days before
 acceptance to 21 in the 90 days after acceptance. Forty-nine repositories had
 fewer commits after acceptance and 10 had more.
 
+![Distribution of default-branch commits before and after acceptance](../figures/cohort/commits_coverage.png)
+
+*Figure 2. Distribution of repository-level default-branch commit counts in
+the matched 90-day windows before and after acceptance. Boxes show the median
+and interquartile range, and points represent individual repositories.*
+
 ![Monthly default-branch commit activity relative to acceptance](../figures/cohort/commits_monthly_activity.png)
 
-*Figure 2. Monthly default-branch commit activity relative to pyOpenSci
+*Figure 3. Monthly default-branch commit activity relative to pyOpenSci
 acceptance. The line shows the median across repositories, the shaded region
 shows the interquartile range, and the dashed line marks acceptance. Only
 repositories with at least 90 days of post-acceptance observation are included.*
@@ -133,7 +139,7 @@ decline varies considerably across the cohort.
 
 ![Change in default-branch commits after acceptance](../figures/cohort/commits_change.png)
 
-*Figure 3. Change in default-branch commits for each repository, calculated as
+*Figure 4. Change in default-branch commits for each repository, calculated as
 the number of commits in the 90 days after acceptance minus the number in the
 90 days before acceptance. The dashed line indicates no change, and the solid
 line marks the cohort median change of −24 commits.*
@@ -144,3 +150,96 @@ packages. Commit activity alone does not establish whether other forms of
 maintenance—such as responding to users, reviewing contributions, or issuing
 releases—continued over the same period. Those behaviors are considered using
 the other available metrics.
+
+### Pull-request activity declines, while observed responses remain common
+
+Pull-request volume follows a pattern similar to commit activity. Across 53
+repositories represented in the matched windows, the median number of pull
+requests decreased from 48 before acceptance to 17 after acceptance. This
+comparison includes repositories with no pull requests in a period as zeros.
+
+![Distribution of pull requests before and after acceptance](../figures/cohort/pull_requests_coverage.png)
+
+*Figure 5. Distribution of repository-level pull-request counts in the
+matched windows before and after acceptance. Boxes show the median and
+interquartile range, and points represent individual repositories.*
+
+The cumulative-response curves provide a complementary view of maintenance.
+About 45% of pull requests opened after acceptance had an observed maintainer
+response within 30 days, compared with about 35% before acceptance. This
+descriptive difference does not establish that acceptance improved response
+behavior, but it does show that the lower post-acceptance activity was not
+accompanied by an absence of maintainer engagement.
+
+![Cumulative share of pull requests with an observed maintainer response](../figures/cohort/pull_requests_cumulative_response.png)
+
+*Figure 6. Cumulative share of pull requests with an observed maintainer
+response during the first 30 days after opening. Line color and style
+distinguish pull requests opened before and after acceptance.*
+
+### Issue results remain preliminary
+
+The currently collected issue data cover only six repositories, substantially
+fewer than the commit and pull-request datasets. Within this small sample, the
+median number of issues decreased from 18 before acceptance to six after
+acceptance. The distribution is included to make the available evidence
+visible, but it is too limited to support a cohort-wide conclusion. Issue
+collection should be expanded before interpreting response and closure times.
+
+![Distribution of issues before and after acceptance](../figures/cohort/issues_coverage.png)
+
+*Figure 7. Distribution of repository-level issue counts in the matched
+windows before and after acceptance. Only six repositories are currently
+represented, and repositories without issues in a period are shown as zero.*
+
+### Star acquisition slows, while packages retain varied audiences
+
+Star acquisition also generally slows after acceptance. Among the 66
+repositories with comparable before-and-after measurements, the median
+within-repository change was three fewer new stars after acceptance. Stars are
+an imperfect measure of either use or maintenance, but they provide one signal
+of continuing external attention to a package.
+
+![Change in newly acquired stars after acceptance](../figures/cohort/stars_acquisition_change.png)
+
+*Figure 8. Within-repository change in newly acquired stars, calculated as
+the number after acceptance minus the number before acceptance. Each point is
+a repository; the solid line marks the median change of −3 stars.*
+
+The cohort spans a wide range of current audience sizes. Most repositories
+have relatively modest star counts, while a small number of highly visible
+projects create a strongly right-skewed distribution. This heterogeneity is
+important when interpreting cohort averages and motivates retaining
+repository-level distributions throughout the analysis.
+
+![Distribution and ranking of current repository stars](../figures/cohort/stars_current_stargazers.png)
+
+*Figure 9. Current repository stars at the snapshot date. The left panel
+shows the cohort distribution on a logarithmic axis; the right panel shows
+the 15 most-starred repositories.*
+
+### Listed maintainers remain publicly active
+
+The maintainer snapshot offers a current rather than before-and-after view.
+For most packages with an available maintainer roster, all listed maintainers
+had some observed public GitHub activity during the 365-day collection window.
+This broad measure does not imply that every contribution was made to the
+accepted package, but it indicates that the people associated with most
+packages remain active in public software development.
+
+![Package-level share of listed maintainers with public activity](../figures/cohort/maintainers_active_share.png)
+
+*Figure 10. Distribution of the share of each package's listed maintainers
+with observed public GitHub activity during the 365-day snapshot window.*
+
+Recency provides a more direct view of that activity. Maintainers are grouped
+by the time since their latest observed public contribution, with accounts
+for which no activity was observed retained as a separate category. These
+results should be interpreted as a snapshot of public GitHub activity: private
+work and activity on other platforms are not observable through this measure.
+
+![Recency of listed maintainer public GitHub activity](../figures/cohort/maintainers_activity_recency.png)
+
+*Figure 11. Listed maintainers grouped by the number of days since their most
+recent observed public GitHub contribution. Accounts without observed public
+activity are shown separately.*
