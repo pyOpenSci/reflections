@@ -107,7 +107,7 @@ def _merge_dois(
 
 
 def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
-    """Return package name and Zenodo, JOSS and other DOIs for each pyOpenSci package
+    """Return name, acceptance date, and Zenodo, JOSS and other DOIs for each pyOpenSci package
 
     Zenodo and JOSS DOIs that are missing, or that aren't a recognizable Zenodo
     or JOSS link, come back as None. If "archive" has no Zenodo DOI, a Zenodo
@@ -121,7 +121,7 @@ def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
     if packages is None:
         packages = load_packages()
     extra_dois = load_extra_dois()
-    unknown = set(extra_dois) - {pkg["package_name"] for pkg in packages}
+    unknown = set(extra_dois) - {pkg.get("package_name") for pkg in packages}
     if unknown:
         warnings.warn(
             f"extra_dois.yml has packages not in packages.yml: {sorted(unknown)}"
@@ -134,10 +134,11 @@ def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
             get_cff_dois(pkg.get("repository_link")), zenodo_doi, joss_doi, []
         )
         zenodo_doi, joss_doi, other_dois = _merge_dois(
-            extra_dois.get(pkg["package_name"], []), zenodo_doi, joss_doi, other_dois
+            extra_dois.get(pkg.get("package_name"), []), zenodo_doi, joss_doi, other_dois
         )
         package_dois.append({
-            "package_name": pkg["package_name"],
+            "package_name": pkg.get("package_name"),
+            "date_accepted": pkg.get("date_accepted"),
             "zenodo_doi": zenodo_doi,
             "joss_doi": joss_doi,
             "other_dois": other_dois,
