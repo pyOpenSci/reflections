@@ -153,21 +153,29 @@ def plot_period_distribution(
     title: str,
     ylabel: str,
     fill_missing: bool = False,
+    colors: tuple[object, object] | None = None,
+    median_color: object | None = None,
 ) -> None:
     """Compare repository-level distributions before and after acceptance."""
 
     paired = paired_values(summary, value, fill_missing=fill_missing)
     fig, ax = plt.subplots()
     series = [paired["before_acceptance"], paired["after_acceptance"]]
-    colors = [BEFORE_COLOR, AFTER_COLOR]
+    period_colors = list(colors) if colors is not None else [BEFORE_COLOR, AFTER_COLOR]
     labels = ["Before acceptance", "After acceptance"]
     box = ax.boxplot(
         series, tick_labels=labels, widths=0.5, patch_artist=True, showfliers=False
     )
-    for patch, color in zip(box["boxes"], colors, strict=True):
+    if median_color is not None:
+        for median in box["medians"]:
+            median.set_color(median_color)
+            median.set_linewidth(1.8)
+    for patch, color in zip(box["boxes"], period_colors, strict=True):
         patch.set_facecolor(color)
         patch.set_alpha(0.35)
-    for index, (values, color) in enumerate(zip(series, colors, strict=True), start=1):
+    for index, (values, color) in enumerate(
+        zip(series, period_colors, strict=True), start=1
+    ):
         jitter = np.random.default_rng(index).uniform(-0.11, 0.11, len(values))
         ax.scatter(
             jitter + index,

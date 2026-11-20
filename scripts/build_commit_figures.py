@@ -4,6 +4,7 @@ import argparse
 import math
 from pathlib import Path
 
+import cmcrameri.cm as cmc
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import FuncFormatter
@@ -96,6 +97,8 @@ def main() -> int:
         title="Distribution of default-branch commits in matched windows",
         ylabel="Commits per repository",
         fill_missing=True,
+        colors=(cmc.acton(0.15), cmc.acton(0.45)),
+        median_color=cmc.acton(0.05),
     )
     plot_change_distribution(
         summary,
