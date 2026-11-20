@@ -132,3 +132,15 @@ uv run python scripts/collect_history_index.py OWNER/REPOSITORY \
 
 The request budget is shared across both indexes. Each completed page is
 written atomically, so rerunning the same command resumes at the next page.
+
+After validating the pilot, cohort collection can proceed in bounded batches:
+
+```bash
+uv run python scripts/collect_cohort_history_indexes.py \
+  --entity both --request-budget 100 --quota-floor 1000
+```
+
+The command reads the authoritative local cohort, skips completed indexes and
+previously recorded repository-level failures, and writes
+`data/derived/history_index_manifest.csv`. Use `--retry-failures` only after a
+recorded repository or API problem has been investigated.

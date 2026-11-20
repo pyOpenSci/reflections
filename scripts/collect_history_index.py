@@ -88,6 +88,7 @@ def main() -> int:
                 existing_snapshot=checkpoint,
                 request_budget=remaining_budget,
                 quota_floor=args.quota_floor,
+                known_rate_remaining=remaining,
                 on_progress=progress,
             )
         except RequestException as error:
@@ -102,6 +103,7 @@ def main() -> int:
             partial_path.unlink(missing_ok=True)
         used = snapshot.requests_used - before
         remaining_budget -= used
+        remaining = snapshot.rate_remaining or remaining
         state = (
             "complete"
             if snapshot.complete

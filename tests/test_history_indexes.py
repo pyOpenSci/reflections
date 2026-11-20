@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
+import json
 
+from reflections.analysis.history_index_manifest import history_index_manifest
 from reflections.datasources.github import (
     collect_history_index,
     load_history_index,
@@ -66,3 +68,36 @@ def test_history_index_resumes_by_page_and_round_trips(tmp_path):
     assert second.next_page == 3
     assert second.requests_used == 2
     assert [item.number for item in second.records] == [1, 2]
+
+
+def test_history_index_manifest_includes_missing_and_complete(tmp_path):
+    complete = collect_history_index(
+        "org/project",
+        "issues",
+        github=FakeGithub([({}, [issue(1)])]),
+        request_budget=1,
+        quota_floor=500,
+    )
+    save_history_index(
+        complete,
+        tmp_path / "issues" / "org--project.json",
+    )
+
+    manifest = history_index_manifest(["org/project"], tmp_path)
+
+    statuses = manifest.set_index("entity_type")["status"].to_dict()
+    assert statuses == {"issues": "complete", "pull_requests": "missing"}
+
+
+def test_history_index_manifest_records_failed_collection(tmp_path):
+    error_path = tmp_path / "errors/pull_requests/org--project.json"
+    error_path.parent.mkdir(parents=True)
+    error_path.write_text(json.dumps({"message": "404 Not Found"}))
+
+    manifest = history_index_manifest(["org/project"], tmp_path)
+    pull_request = manifest.loc[
+        manifest["entity_type"] == "pull_requests"
+    ].iloc[0]
+
+    assert pull_request["status"] == "failed"
+    assert pull_request["error"] == "404 Not Found"

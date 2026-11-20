@@ -12,7 +12,7 @@ from .models import HistoryIndexRecord, HistoryIndexSnapshot
 
 PAGE_SIZE = 100
 ENTITY_ENDPOINTS = {"issues": "issues", "pull_requests": "pulls"}
-_LAST_PAGE = re.compile(r"[?&]page=(\d+)>;\s*rel=\"last\"")
+_LAST_PAGE = re.compile(r"[?&]page=(\d+)[^>]*>;\s*rel=\"last\"")
 
 
 def collect_history_index(
@@ -23,6 +23,7 @@ def collect_history_index(
     existing_snapshot: HistoryIndexSnapshot | None = None,
     request_budget: int = 25,
     quota_floor: int = 500,
+    known_rate_remaining: int | None = None,
     on_progress: Callable[[HistoryIndexSnapshot, int, int | None], None] | None = None,
 ) -> HistoryIndexSnapshot:
     """Collect list metadata while respecting a hard local and GitHub quota budget."""
@@ -38,7 +39,11 @@ def collect_history_index(
         return existing_snapshot
 
     client = github or create_github()
-    remaining, _ = client.rate_limiting
+    remaining = (
+        known_rate_remaining
+        if known_rate_remaining is not None
+        else client.rate_limiting[0]
+    )
     allowed = min(request_budget, max(0, remaining - quota_floor))
     records = {
         item.number: item
