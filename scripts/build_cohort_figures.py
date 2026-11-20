@@ -3,11 +3,12 @@
 import argparse
 from pathlib import Path
 
-import cmcrameri.cm as cmc
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from reflections.analysis.plotting import (
+    ACCENT_COLOR,
+    NEUTRAL_COLOR,
     apply_plot_style,
     save_figure,
 )
@@ -41,14 +42,14 @@ def _plot_commit_recency(cohort: pd.DataFrame, path: Path) -> None:
     ax.hist(
         observed_months,
         bins="auto",
-        color=cmc.acton(0.45),
+        color=NEUTRAL_COLOR,
         alpha=0.8,
         edgecolor="white",
     )
     median = float(observed_months.median())
     ax.axvline(
         median,
-        color=cmc.acton(0.05),
+        color=ACCENT_COLOR,
         linewidth=2.5,
         label=f"median: {median:.1f} months",
     )

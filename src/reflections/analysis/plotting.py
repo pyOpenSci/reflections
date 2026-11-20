@@ -8,10 +8,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-BEFORE_COLOR = cmc.batlow(0.15)
-AFTER_COLOR = cmc.batlow(0.75)
-NEUTRAL_COLOR = cmc.batlow(0.48)
-ACCENT_COLOR = cmc.batlow(0.92)
+BEFORE_COLOR = cmc.acton(0.15)
+AFTER_COLOR = cmc.acton(0.50)
+NEUTRAL_COLOR = cmc.acton(0.38)
+ACCENT_COLOR = cmc.acton(0.03)
+PLOT_COLORS = (
+    BEFORE_COLOR,
+    AFTER_COLOR,
+    cmc.acton(0.28),
+    cmc.acton(0.62),
+)
 
 
 def apply_plot_style() -> None:
@@ -27,6 +33,7 @@ def apply_plot_style() -> None:
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.grid": False,
+            "axes.prop_cycle": mpl.cycler(color=PLOT_COLORS),
             "legend.frameon": False,
             "savefig.bbox": "tight",
             "svg.fonttype": "none",
@@ -154,7 +161,6 @@ def plot_period_distribution(
     ylabel: str,
     fill_missing: bool = False,
     colors: tuple[object, object] | None = None,
-    median_color: object | None = None,
 ) -> None:
     """Compare repository-level distributions before and after acceptance."""
 
@@ -166,10 +172,9 @@ def plot_period_distribution(
     box = ax.boxplot(
         series, tick_labels=labels, widths=0.5, patch_artist=True, showfliers=False
     )
-    if median_color is not None:
-        for median in box["medians"]:
-            median.set_color(median_color)
-            median.set_linewidth(1.8)
+    for median in box["medians"]:
+        median.set_color(ACCENT_COLOR)
+        median.set_linewidth(1.8)
     for patch, color in zip(box["boxes"], period_colors, strict=True):
         patch.set_facecolor(color)
         patch.set_alpha(0.35)
