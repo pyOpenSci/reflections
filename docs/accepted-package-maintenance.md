@@ -26,11 +26,11 @@ future comparison with a carefully selected control group of packages that
 have not undergone pyOpenSci review will help evaluate whether the observed
 patterns are distinctive to the pyOpenSci cohort.
 
-These findings should also be interpreted in light of the available sample.
-Commit, star, and maintainer measurements currently cover much of the
-accepted-package cohort, while the issue and pull-request datasets contain
-fewer repositories and should be treated as preliminary. The analysis can be
-updated as collection becomes more complete.
+These findings should also be interpreted in light of metric-specific data
+coverage. The current analyses include between 59 and 70 of the 70
+GitHub-hosted repositories, depending on eligibility, snapshot availability,
+and whether a repository has events in the analysis window. Coverage and
+exclusions are documented in the [data coverage audit](data-coverage.md).
 
 ## Cohort profile
 
@@ -103,10 +103,10 @@ the number of repositories observable at each point in time. Maintainer
 activity provides a current snapshot of public GitHub activity rather than a
 direct before-and-after comparison.
 
-Because data availability varies, the number of packages contributing to each
-metric is not always the same. Results are therefore presented with
-metric-specific sample sizes, and findings based on the smaller pull-request
-and issue datasets should be considered preliminary.
+Because data availability and eligibility vary, the number of packages
+contributing to each metric is not always the same. Results are therefore
+presented with metric-specific sample sizes and should be interpreted with the
+coverage audit.
 
 ## Early results
 
@@ -153,9 +153,9 @@ the other available metrics.
 
 ### Pull-request activity declines, while observed responses remain common
 
-Pull-request volume follows a pattern similar to commit activity. Across 53
+Pull-request volume follows a pattern similar to commit activity. Across 65
 repositories represented in the matched windows, the median number of pull
-requests decreased from 48 before acceptance to 17 after acceptance. This
+requests decreased from 41 before acceptance to 12 after acceptance. This
 comparison includes repositories with no pull requests in a period as zeros.
 
 ![Distribution of pull requests before and after acceptance](../figures/cohort/pull_requests_coverage.png)
@@ -165,8 +165,8 @@ matched windows before and after acceptance. Boxes show the median and
 interquartile range, and points represent individual repositories.*
 
 The cumulative-response curves provide a complementary view of maintenance.
-About 45% of pull requests opened after acceptance had an observed maintainer
-response within 30 days, compared with about 35% before acceptance. This
+About 41% of pull requests opened after acceptance had an observed maintainer
+response within 30 days, compared with about 33% before acceptance. This
 descriptive difference does not establish that acceptance improved response
 behavior, but it does show that the lower post-acceptance activity was not
 accompanied by an absence of maintainer engagement.
@@ -177,20 +177,22 @@ accompanied by an absence of maintainer engagement.
 response during the first 30 days after opening. Line color and style
 distinguish pull requests opened before and after acceptance.*
 
-### Issue results remain preliminary
+### Issue activity declines in the matched windows
 
-The currently collected issue data cover only six repositories, substantially
-fewer than the commit and pull-request datasets. Within this small sample, the
-median number of issues decreased from 18 before acceptance to six after
-acceptance. The distribution is included to make the available evidence
-visible, but it is too limited to support a cohort-wide conclusion. Issue
-collection should be expanded before interpreting response and closure times.
+The rebuilt issue dataset covers 68 repositories. The median number of issues
+decreased from 20.5 before acceptance to 4.5 after acceptance, a pattern
+consistent with the decline in commits and pull requests. Among repositories
+with observations in both periods, the median change in time until an issue
+was first addressed was 0.2 days across 35 repositories, while the median
+change in issue close time was 6.8 days across 45 repositories. These timing
+results describe observed issues and do not account for differences in issue
+complexity or composition between periods.
 
 ![Distribution of issues before and after acceptance](../figures/cohort/issues_coverage.png)
 
 *Figure 7. Distribution of repository-level issue counts in the matched
-windows before and after acceptance. Only six repositories are currently
-represented, and repositories without issues in a period are shown as zero.*
+windows before and after acceptance. Sixty-eight repositories are represented,
+and repositories without issues in a period are shown as zero.*
 
 ### Star acquisition slows, while packages retain varied audiences
 
