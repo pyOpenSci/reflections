@@ -1,6 +1,6 @@
+import unittest
 from datetime import UTC, datetime
 from types import SimpleNamespace
-import unittest
 
 from reflections.datasources.github.client import (
     APPROVED_LABEL,
@@ -55,7 +55,9 @@ class GitHubClientTests(unittest.TestCase):
 
         submission = get_submission("swiftgalaxy", github=github)
 
-        self.assertEqual(repository.query, {"state": "closed", "labels": [APPROVED_LABEL]})
+        self.assertEqual(
+            repository.query, {"state": "closed", "labels": [APPROVED_LABEL]}
+        )
         self.assertEqual(submission.repository, "SWIFTSIM/swiftgalaxy")
         self.assertEqual(submission.accepted_at, timestamp(4))
 
@@ -85,7 +87,9 @@ class GitHubClientTests(unittest.TestCase):
             [submission.package for submission in submissions],
             ["older", "newer"],
         )
-        self.assertEqual(repository.query, {"state": "closed", "labels": [APPROVED_LABEL]})
+        self.assertEqual(
+            repository.query, {"state": "closed", "labels": [APPROVED_LABEL]}
+        )
 
     def test_batch_discovery_can_warn_and_skip_non_github_repositories(self):
         unsupported = SimpleNamespace(
@@ -111,7 +115,9 @@ class GitHubClientTests(unittest.TestCase):
                 on_unsupported="warn",
             )
 
-        self.assertEqual([item.repository for item in submissions], ["example/supported"])
+        self.assertEqual(
+            [item.repository for item in submissions], ["example/supported"]
+        )
 
     def test_batch_discovery_is_strict_by_default(self):
         issue = SimpleNamespace(
@@ -139,6 +145,26 @@ class GitHubClientTests(unittest.TestCase):
 
         self.assertEqual(repository, "example/useful-package")
 
+    def test_repository_parser_strips_markdown_emphasis(self):
+        repository = _repository_from_issue_body(
+            "Repository Link: **https://github.com/example/useful-package**",
+            excluded_repository="PyOpenSci/software-submission",
+        )
+
+        self.assertEqual(repository, "example/useful-package")
+
+    def test_repository_field_does_not_fall_back_to_unrelated_github_link(self):
+        body = """
+        Repository Link: https://gitlab.com/example/elsewhere
+        Screenshot: https://github.com/user-attachments/assets/image-id
+        """
+
+        with self.assertRaises(UnsupportedRepositoryHostError):
+            _repository_from_issue_body(
+                body,
+                excluded_repository="PyOpenSci/software-submission",
+            )
+
     def test_repository_parser_requires_a_link(self):
         with self.assertRaises(RepositoryLinkNotFoundError):
             _repository_from_issue_body("No link", excluded_repository="some/repo")
@@ -164,13 +190,15 @@ class GitHubClientTests(unittest.TestCase):
             closed_at=timestamp(4),
             merged_at=timestamp(4),
             get_issue_comments=lambda: [issue_comment],
-            get_review_comments=lambda: [],
+            get_review_comments=list,
             get_reviews=lambda: [review],
         )
 
         record = _collect_pull_request(pull_request)
 
-        self.assertEqual([event.kind for event in record.responses], ["review", "issue_comment"])
+        self.assertEqual(
+            [event.kind for event in record.responses], ["review", "issue_comment"]
+        )
 
     def test_repository_collection_limits_window_and_resumes_cached_prs(self):
         calls = []
@@ -221,8 +249,8 @@ class GitHubClientTests(unittest.TestCase):
             github=github,
             window_days=3,
             existing_snapshot=checkpoint,
-            on_progress=lambda snapshot, current, total, number, cached: progress.append(
-                (current, total, number, cached)
+            on_progress=lambda snapshot, current, total, number, cached: (
+                progress.append((current, total, number, cached))
             ),
         )
 

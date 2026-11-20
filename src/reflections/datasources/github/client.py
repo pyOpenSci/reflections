@@ -1,11 +1,11 @@
 """Collect normalized pyOpenSci submission and repository data from GitHub."""
 
-from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
 import os
 import re
-from typing import Any
 import warnings
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from github import Auth, Github
 
@@ -355,6 +355,16 @@ def _maintainers_from_issue_body(body: str) -> tuple[str, ...]:
 
 
 def _repository_from_issue_body(body: str, *, excluded_repository: str) -> str:
+    repository_field = _REPOSITORY_FIELD_URL.search(body)
+    if repository_field:
+        field_url = repository_field.group(1)
+        field_candidates = _repository_links(field_url)
+        if field_candidates:
+            return field_candidates[0]
+        raise UnsupportedRepositoryHostError(
+            f"repository is not hosted on GitHub: {field_url.rstrip('.,;*')}"
+        )
+
     candidates = _repository_links(body)
     eligible = [
         candidate
@@ -362,12 +372,6 @@ def _repository_from_issue_body(body: str, *, excluded_repository: str) -> str:
         if candidate.casefold() != excluded_repository.casefold()
     ]
     if not eligible:
-        repository_field = _REPOSITORY_FIELD_URL.search(body)
-        if repository_field:
-            raise UnsupportedRepositoryHostError(
-                "repository is not hosted on GitHub: "
-                f"{repository_field.group(1).rstrip('.,;')}"
-            )
         raise RepositoryLinkNotFoundError(
             "The approved submission issue does not contain a GitHub repository URL"
         )
@@ -377,9 +381,8 @@ def _repository_from_issue_body(body: str, *, excluded_repository: str) -> str:
 def _repository_links(body: str) -> list[str]:
     links: list[str] = []
     for owner, raw_repository in _GITHUB_REPOSITORY_URL.findall(body):
-        repository = raw_repository.rstrip(".,;:'\"")
-        if repository.endswith(".git"):
-            repository = repository[:-4]
+        repository = raw_repository.rstrip(".,;:'\"*")
+        repository = repository.removesuffix(".git")
         name = f"{owner}/{repository}"
         if name not in links:
             links.append(name)

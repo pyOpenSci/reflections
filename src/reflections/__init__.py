@@ -1,6 +1,7 @@
 """Tools for reflecting on pyOpenSci package maintenance and adoption."""
 
 from .analysis import (
+    write_cohort_csv,
     write_commit_csv,
     write_issue_csv,
     write_maintainer_csvs,
@@ -8,6 +9,7 @@ from .analysis import (
     write_star_csv,
 )
 from .datasources.github import (
+    collect_cohort_metadata,
     collect_commit_snapshot,
     collect_issue_snapshot,
     collect_maintainer_activity,
@@ -15,12 +17,14 @@ from .datasources.github import (
     collect_star_snapshot,
     get_accepted_submissions,
     get_submission,
+    load_cohort_metadata,
     load_commit_snapshot,
     load_issue_snapshot,
     load_maintainer_activity,
     load_maintainer_roster,
     load_snapshot,
     load_star_snapshot,
+    save_cohort_metadata,
     save_commit_snapshot,
     save_issue_snapshot,
     save_maintainer_activity,
@@ -37,11 +41,12 @@ from .metrics import (
 )
 
 __all__ = [
-    "MaintainerResponsePolicy",
     "IssueResponsePolicy",
     "IssueTiming",
+    "MaintainerResponsePolicy",
     "calculate_first_response_times",
     "calculate_issue_times",
+    "collect_cohort_metadata",
     "collect_commit_snapshot",
     "collect_issue_snapshot",
     "collect_maintainer_activity",
@@ -49,22 +54,25 @@ __all__ = [
     "collect_star_snapshot",
     "get_accepted_submissions",
     "get_submission",
+    "load_cohort_metadata",
     "load_commit_snapshot",
     "load_issue_snapshot",
     "load_maintainer_activity",
     "load_maintainer_roster",
     "load_snapshot",
     "load_star_snapshot",
+    "save_cohort_metadata",
     "save_commit_snapshot",
     "save_issue_snapshot",
     "save_maintainer_activity",
     "save_maintainer_roster",
     "save_snapshot",
     "save_star_snapshot",
-    "write_pull_request_csv",
+    "write_cohort_csv",
     "write_commit_csv",
     "write_issue_csv",
     "write_maintainer_csvs",
+    "write_pull_request_csv",
     "write_star_csv",
 ]
 

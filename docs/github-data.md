@@ -4,6 +4,22 @@ The GitHub data source maintains independent snapshots for pull-request
 responses, commit activity, and issue timelines. Collecting one does not
 invalidate or repeat the others.
 
+## Cohort metadata
+
+```console
+uv run python scripts/collect_cohort_metadata.py
+uv run python scripts/build_cohort_dataset.py
+uv run python scripts/build_cohort_figures.py
+```
+
+The cohort collector reads the cached accepted-package roster and stores one
+small snapshot per GitHub-hosted package in `data/github/cohort/`. The derived
+`data/derived/cohort.csv` contains submission and acceptance dates, review
+duration, repository creation date, listed-maintainer count, and the latest
+default-branch commit timestamp. Collection is resumable and existing
+snapshots are reused unless `--refresh` is supplied. The cohort figure builder
+writes presentation-ready profile figures to `figures/cohort/`.
+
 ## Pull-request responses
 
 ```console

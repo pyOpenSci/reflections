@@ -22,6 +22,26 @@ class Submission:
 
 
 @dataclass(frozen=True)
+class CohortMetadataSnapshot:
+    """Submission and repository dates used to describe the cohort."""
+
+    package: str
+    repository: str
+    issue_number: int
+    issue_url: str
+    submitted_at: datetime
+    accepted_at: datetime
+    repository_created_at: datetime
+    last_default_branch_commit_at: datetime | None
+    default_branch: str
+    fetched_at: datetime
+    maintainer_count: int
+    repository_archived: bool
+    repository_is_fork: bool
+    schema_version: int = 2
+
+
+@dataclass(frozen=True)
 class ResponseEvent:
     """An activity on a pull request that could constitute a response."""
 
