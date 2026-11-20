@@ -1,5 +1,6 @@
 """Get citation count for a DOI with OpenAlex"""
 
+import datetime
 import os
 
 import pyalex
@@ -31,9 +32,25 @@ def get_openalex_stats(doi: str) -> dict:
         "openalex_id": work.get("id"),
         "title": work.get("title"),
         "publication_year": work.get("publication_year"),
+        "publication_date": work.get("publication_date"),
         "citations": work.get("cited_by_count"),
         "citations_by_year": dict(sorted(
             (c["year"], c["cited_by_count"]) for c in work.get("counts_by_year") or []
         )),
         "fwci": work.get("fwci"),
+    }
+
+
+def get_citations_before_after(openalex_id: str, date: str) -> dict:
+    """Count citations to an OpenAlex work published before vs on/after a date
+
+    date is YYYY-MM-DD. Uses the citing work's publication date. The two
+    counts can add up to a bit less than cited_by_count, because OpenAlex's
+    filtered counts don't fully match its stored total, and citing works
+    without a publication date aren't counted.
+    """
+    day_before = (datetime.date.fromisoformat(date) - datetime.timedelta(days=1)).isoformat()
+    return {
+        "before": Works().filter(cites=openalex_id, to_publication_date=day_before).count(),
+        "after": Works().filter(cites=openalex_id, from_publication_date=date).count(),
     }

@@ -36,8 +36,9 @@ def get_zenodo_concept_doi(doi: str) -> str | None:
     return bare_doi(rec.get("conceptdoi") or rec["doi"])
 
 
-def get_zenodo_stats(doi: str) -> dict:
-    """Return Zenodo usage stats for a Zenodo DOI (concept or single)."""
+@functools.cache
+def _get_record(doi: str) -> dict:
+    """Return the Zenodo record JSON for a Zenodo DOI (concept or single)"""
     doi = bare_doi(doi)
     m = re.fullmatch(r"10\.5281/zenodo\.(\d+)", doi)
 
@@ -54,7 +55,13 @@ def get_zenodo_stats(doi: str) -> dict:
         if not hits:
             raise LookupError(f"No Zenodo record for {doi}")
         rec = hits[0]
+    return rec
 
+
+def get_zenodo_stats(doi: str) -> dict:
+    """Return Zenodo usage stats for a Zenodo DOI (concept or single)."""
+    doi = bare_doi(doi)
+    rec = _get_record(doi)
     s = rec["stats"]
     return {
         "queried_doi": doi,
@@ -66,3 +73,39 @@ def get_zenodo_stats(doi: str) -> dict:
         "downloads": s["downloads"],
         "unique_downloads": s["unique_downloads"],
     }
+
+
+def get_zenodo_versions(doi: str) -> list[dict]:
+    """Return per-version Zenodo usage stats for every version of a record
+
+    Zenodo's public API has no usage-over-time data, only totals for each
+    version. Each entry has the version's doi, version label, created date
+    (YYYY-MM-DD, when it was uploaded) and its own views/downloads, oldest
+    first.
+    """
+    rec = _get_record(doi)
+    concept_id = rec.get("conceptrecid") or rec["id"]
+    hits, page = [], 1
+    while True:
+        # 25 is the largest page size Zenodo allows without a token
+        r = _session.get(ZENODO_API, params={
+            "q": f"parent.id:{concept_id}", "allversions": "true",
+            "sort": "oldest", "size": 25, "page": page,
+        }, timeout=30)
+        r.raise_for_status()
+        result = r.json()["hits"]
+        hits.extend(result["hits"])
+        if not result["hits"] or len(hits) >= result["total"]:
+            break
+        page += 1
+    if not hits:  # a record without versions isn't always indexed by parent
+        hits = [rec]
+    return [{
+        "doi": h["doi"],
+        "version": h["metadata"].get("version"),
+        "created": h["created"][:10],
+        "views": h["stats"]["version_views"],
+        "unique_views": h["stats"]["version_unique_views"],
+        "downloads": h["stats"]["version_downloads"],
+        "unique_downloads": h["stats"]["version_unique_downloads"],
+    } for h in hits]

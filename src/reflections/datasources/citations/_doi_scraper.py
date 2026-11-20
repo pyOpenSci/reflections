@@ -6,6 +6,7 @@ separately as candidates for manual review.
 """
 
 import csv
+import datetime
 import re
 import warnings
 
@@ -38,6 +39,19 @@ def load_packages(url: str = PACKAGES_URL) -> list[dict]:
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
     return yaml.safe_load(resp.text)
+
+
+def _iso_date(value) -> str | None:
+    """Normalize a packages.yml date to YYYY-MM-DD
+
+    packages.yml has a mix of '2024-02-29', 2024-2-29 and '2025-05- 10'.
+    """
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime.date):
+        return value.isoformat()
+    year, month, day = (int(part) for part in str(value).replace(" ", "").split("-"))
+    return datetime.date(year, month, day).isoformat()
 
 
 def _zenodo_doi(archive: str | None) -> str | None:
@@ -138,7 +152,8 @@ def get_package_dois(packages: list[dict] | None = None) -> list[dict]:
         )
         package_dois.append({
             "package_name": pkg.get("package_name"),
-            "date_accepted": pkg.get("date_accepted"),
+            "date_accepted": _iso_date(pkg.get("date_accepted")),
+            "version_accepted": pkg.get("version_accepted"),
             "zenodo_doi": zenodo_doi,
             "joss_doi": joss_doi,
             "other_dois": other_dois,
