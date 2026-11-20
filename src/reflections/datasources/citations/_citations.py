@@ -1,6 +1,8 @@
 """Get citation, view, and download counts for DOIs associated with pyOS"""
 
 import datetime
+import json
+from pathlib import Path
 
 import requests
 
@@ -12,7 +14,7 @@ ZENODO_METRICS = ("views", "downloads", "unique_views", "unique_downloads")
 
 
 def _openalex_work(kind: str, stats: dict) -> dict:
-    """Summarize one OpenAlex lookup for CitationCount.stats["works"]"""
+    """Summarize one OpenAlex lookup for a package's stats["works"]"""
     return {
         "kind": kind,
         "doi": stats["queried_doi"],
@@ -40,127 +42,142 @@ def _sum_by_year(by_year_dicts: list[dict]) -> dict[int, int]:
     return dict(sorted(total.items()))
 
 
-class CitationCount:
+def _fetch_openalex_stats(doi: str, date_accepted: str | None) -> dict:
+    """fetch_openalex_stats(), plus citations before/after acceptance"""
+    stats = fetch_openalex_stats(doi)
+    if date_accepted and stats["openalex_id"] is not None:
+        split = fetch_citations_before_after(stats["openalex_id"], date_accepted)
+        stats["citations_before"] = split["before"]
+        stats["citations_after"] = split["after"]
+    elif date_accepted:
+        stats["citations_before"] = stats["citations_after"] = None
+    return stats
 
-    def __init__(
-            self,
-            zenodo_doi: str | None = None,
-            joss_doi: str | None = None,
-            other_dois: list[str] | None = None,
-            date_accepted: str | None = None,
-            ):
-        """date_accepted (YYYY-MM-DD) turns on the before/after-acceptance stats"""
-        self.zenodo_doi = zenodo_doi
-        self.joss_doi = joss_doi
-        self.other_dois = other_dois
-        self.date_accepted = date_accepted
-        self.stats = {"works": []}
 
-    def _fetch_openalex_stats(self, doi: str) -> dict:
-        """fetch_openalex_stats(), plus citations before/after acceptance"""
-        stats = fetch_openalex_stats(doi)
-        if self.date_accepted and stats["openalex_id"] is not None:
-            split = fetch_citations_before_after(stats["openalex_id"], self.date_accepted)
-            stats["citations_before"] = split["before"]
-            stats["citations_after"] = split["after"]
-        elif self.date_accepted:
-            stats["citations_before"] = stats["citations_after"] = None
-        return stats
+def _add_zenodo_before_after(stats: dict, zenodo_doi: str, date_accepted: str):
+    """Split Zenodo views/downloads by whether each version predates acceptance"""
+    versions = fetch_zenodo_versions(zenodo_doi)
+    stats['zenodo_versions'] = versions
+    stats['zenodo_first_version_date'] = versions[0]['created'] if versions else None
+    before = [v for v in versions if v['created'] < date_accepted]
+    after = [v for v in versions if v['created'] >= date_accepted]
+    for metric in ZENODO_METRICS:
+        stats[f'zenodo_{metric}_before'] = sum(v[metric] for v in before)
+        stats[f'zenodo_{metric}_after'] = sum(v[metric] for v in after)
 
-    def _fetch_zenodo_before_after(self):
-        """Split Zenodo views/downloads by whether each version predates acceptance"""
-        versions = fetch_zenodo_versions(self.zenodo_doi)
-        self.stats['zenodo_versions'] = versions
-        self.stats['zenodo_first_version_date'] = versions[0]['created'] if versions else None
-        before = [v for v in versions if v['created'] < self.date_accepted]
-        after = [v for v in versions if v['created'] >= self.date_accepted]
+
+def _add_openalex_stats(
+        stats: dict,
+        kind: str,
+        dois: list[str],
+        date_accepted: str | None,
+        counted_works: set[str],
+        ):
+    """Add {kind}_citations, _citations_by_year, _fwci (and _before/_after) to stats
+
+    Citations are summed and FWCI averaged across dois. OpenAlex merges
+    different DOIs for the same work (e.g. an arXiv preprint and its journal
+    version, or a Zenodo DOI and its JOSS paper), so works already in
+    counted_works are skipped. Unindexed DOIs have no OpenAlex ID and are
+    never skipped.
+    """
+    counted = []
+    for doi in dois:
+        doi_stats = _fetch_openalex_stats(doi, date_accepted)
+        work = doi_stats['openalex_id']
+        if work is not None:
+            if work in counted_works:
+                continue
+            counted_works.add(work)
+        counted.append(doi_stats)
+        stats['works'].append(_openalex_work(kind, doi_stats))
+
+    citations = [s['citations'] for s in counted if s['citations'] is not None]
+    fwcis = [s['fwci'] for s in counted if s['fwci'] is not None]
+    stats[f'{kind}_citations'] = sum(citations) if citations else None
+    stats[f'{kind}_citations_by_year'] = _sum_by_year(
+        [s['citations_by_year'] for s in counted])
+    stats[f'{kind}_fwci'] = sum(fwcis) / len(fwcis) if fwcis else None
+    if date_accepted:
+        for period in ('before', 'after'):
+            stats[f'{kind}_citations_{period}'] = _sum_or_none(
+                [s[f'citations_{period}'] for s in counted])
+
+
+def _add_package_stats(
+        stats: dict,
+        zenodo_doi: str | None = None,
+        joss_doi: str | None = None,
+        other_dois: list[str] | None = None,
+        date_accepted: str | None = None,
+        ):
+    """Download stats from Zenodo and OpenAlex for one package's DOIs into stats
+
+    Fills stats in place, so if a lookup fails partway the caller still has
+    what was collected before it. date_accepted (YYYY-MM-DD) turns on the
+    before/after-acceptance stats.
+    """
+    stats.setdefault('works', [])
+
+    if zenodo_doi:
+        zenodo_stats = fetch_zenodo_stats(zenodo_doi)
         for metric in ZENODO_METRICS:
-            self.stats[f'zenodo_{metric}_before'] = sum(v[metric] for v in before)
-            self.stats[f'zenodo_{metric}_after'] = sum(v[metric] for v in after)
+            stats[f'zenodo_{metric}'] = zenodo_stats[metric]
+        if date_accepted:
+            _add_zenodo_before_after(stats, zenodo_doi, date_accepted)
 
-    def fetch_stats(self):
-        """Download stats from Zenodo and OpenAlex based on provided DOIs"""
-        # OpenAlex works already counted, so the same work isn't counted twice
-        counted_works = set()
-
-        if self.zenodo_doi:
-            zenodo_stats = fetch_zenodo_stats(self.zenodo_doi)
-            self.stats['zenodo_views'] = zenodo_stats['views']
-            self.stats['zenodo_downloads'] = zenodo_stats['downloads']
-            self.stats['zenodo_unique_views'] = zenodo_stats['unique_views']
-            self.stats['zenodo_unique_downloads'] = zenodo_stats['unique_downloads']
-            if self.date_accepted:
-                self._fetch_zenodo_before_after()
-            zenodo_openalex_stats = self._fetch_openalex_stats(self.zenodo_doi)
-            self.stats['zenodo_citations'] = zenodo_openalex_stats['citations']
-            self.stats['zenodo_citations_by_year'] = zenodo_openalex_stats['citations_by_year']
-            self.stats['zenodo_fwci'] = zenodo_openalex_stats['fwci']
-            if self.date_accepted:
-                self.stats['zenodo_citations_before'] = zenodo_openalex_stats['citations_before']
-                self.stats['zenodo_citations_after'] = zenodo_openalex_stats['citations_after']
-            self.stats['works'].append(_openalex_work('zenodo', zenodo_openalex_stats))
-            counted_works.add(zenodo_openalex_stats['openalex_id'])
-
-        if self.joss_doi:
-            joss_stats = self._fetch_openalex_stats(self.joss_doi)
-            self.stats['joss_citations'] = joss_stats['citations']
-            self.stats['joss_citations_by_year'] = joss_stats['citations_by_year']
-            self.stats['joss_fwci'] = joss_stats['fwci']
-            if self.date_accepted:
-                self.stats['joss_citations_before'] = joss_stats['citations_before']
-                self.stats['joss_citations_after'] = joss_stats['citations_after']
-            self.stats['works'].append(_openalex_work('joss', joss_stats))
-            counted_works.add(joss_stats['openalex_id'])
-
-        if self.other_dois:
-            # OpenAlex merges different DOIs for the same work (e.g. an arXiv
-            # preprint and its journal version), so skip works already counted.
-            # Unindexed DOIs have no OpenAlex ID and are never skipped.
-            other_stats = []
-            for doi in self.other_dois:
-                doi_stats = self._fetch_openalex_stats(doi)
-                work = doi_stats['openalex_id']
-                if work is None or work not in counted_works:
-                    other_stats.append(doi_stats)
-                    self.stats['works'].append(_openalex_work('other', doi_stats))
-                    counted_works.add(work)
-            citations = [s['citations'] for s in other_stats if s['citations'] is not None]
-            fwcis = [s['fwci'] for s in other_stats if s['fwci'] is not None]
-            self.stats['other_citations'] = sum(citations) if citations else None
-            self.stats['other_citations_by_year'] = (
-                _sum_by_year([s['citations_by_year'] for s in other_stats])
-                if citations else None
-            )
-            self.stats['other_fwci'] = sum(fwcis) / len(fwcis) if fwcis else None
-            if self.date_accepted:
-                self.stats['other_citations_before'] = _sum_or_none(
-                    [s['citations_before'] for s in other_stats])
-                self.stats['other_citations_after'] = _sum_or_none(
-                    [s['citations_after'] for s in other_stats])
+    # JOSS first: when OpenAlex merges a Zenodo DOI into its JOSS paper, the
+    # citations are credited to JOSS
+    counted_works = set()
+    for kind, dois in (
+            ('joss', [joss_doi] if joss_doi else []),
+            ('zenodo', [zenodo_doi] if zenodo_doi else []),
+            ('other', other_dois or []),
+            ):
+        if dois:
+            _add_openalex_stats(stats, kind, dois, date_accepted, counted_works)
 
 
-def fetch_all_citations() -> list[dict]:
-    """Download pyOpenSci's package list and get citation stats for every package"""
-    return _fetch_citations(fetch_package_dois())
+def _save_json(citations: list[dict], path: str | Path):
+    """Write citation results to a JSON file (year keys become strings)"""
+    Path(path).write_text(json.dumps(citations, indent=1, default=str))
 
 
-def _fetch_citations(package_list: list[dict]) -> list[dict]:
+def fetch_all_citations(save_to: str | Path | None = None) -> list[dict]:
+    """Download pyOpenSci's package list and get citation stats for every package
+
+    Args:
+        save_to: if given, also write the results to this JSON file
+    """
+    return fetch_citations(fetch_package_dois(), save_to=save_to)
+
+
+def fetch_citations(
+        package_list: list[dict], save_to: str | Path | None = None
+        ) -> list[dict]:
     """Get citation stats for each package in a list from fetch_package_dois()
 
+    Useful for refreshing a few packages without re-downloading all of them.
     A package whose lookup fails keeps whatever stats were collected before
     the failure, with the error message under "error".
+
+    Args:
+        package_list: dicts with "package_name" and optionally "zenodo_doi",
+            "joss_doi", "other_dois", "date_accepted", "version_accepted"
+        save_to: if given, also write the results to this JSON file
     """
     citation_counts = []
     for pkg in package_list:
-        citation_count = CitationCount(
-            zenodo_doi=pkg.get("zenodo_doi"),
-            joss_doi=pkg.get("joss_doi"),
-            other_dois=pkg.get("other_dois"),
-            date_accepted=pkg.get("date_accepted"),
-        )
+        stats = {"works": []}
         error = None
         try:
-            citation_count.fetch_stats()
+            _add_package_stats(
+                stats,
+                zenodo_doi=pkg.get("zenodo_doi"),
+                joss_doi=pkg.get("joss_doi"),
+                other_dois=pkg.get("other_dois"),
+                date_accepted=pkg.get("date_accepted"),
+            )
         except (requests.RequestException, LookupError) as e:
             error = f"{type(e).__name__}: {e}"
         citation_counts.append({
@@ -171,7 +188,9 @@ def _fetch_citations(package_list: list[dict]) -> list[dict]:
             "zenodo_doi": pkg.get("zenodo_doi"),
             "joss_doi": pkg.get("joss_doi"),
             "other_dois": pkg.get("other_dois"),
-            "stats": citation_count.stats,
+            "stats": stats,
             "error": error,
         })
+    if save_to is not None:
+        _save_json(citation_counts, save_to)
     return citation_counts
