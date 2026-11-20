@@ -8,7 +8,15 @@ Download citation counts and Zenodo impact stats for pyOpenSci packages.
 import reflections
 
 impact_list = reflections.datasources.citations.fetch_all_citations()
+
+# Also write the results to a JSON file
+impact_list = reflections.datasources.citations.fetch_all_citations(save_to="citations.json")
 ```
+
+`fetch_citations(package_list, save_to=None)` does the same for a list of
+packages from `fetch_package_dois()`, e.g. to refresh a few without
+re-downloading all of them. In the JSON file, `{year: count}` keys are strings,
+since JSON keys can't be numbers.
 
 Returns a list of dicts, one per package, with these keys:
 - `package_name`
@@ -33,10 +41,17 @@ DOIs come from packages.yml, the repo's CITATION.cff, and the hand-curated
     DOI.
 - `joss_citations`, `joss_fwci`: from the OpenAlex record for the JOSS DOI.
 - `other_citations`, `other_fwci`: total citations and mean FWCI across
-    `other_dois`, counting each OpenAlex work once.
+    `other_dois`.
 
 - `zenodo_citations_by_year`, `joss_citations_by_year`,
-    `other_citations_by_year`: `{year: citations}` for the same works.
+    `other_citations_by_year`: `{year: citations}` for the same works, or `{}`
+    if none are indexed.
+
+Each OpenAlex work is counted once per package. OpenAlex sometimes merges
+several DOIs into one work, e.g. a Zenodo DOI into its JOSS paper. The DOIs are
+looked up in the order JOSS, Zenodo, other, and a work goes to the first kind
+that finds it. So `zenodo_citations` is None when the Zenodo DOI resolves to the
+JOSS paper (e.g. automata, XGI).
 - `works`: one entry per OpenAlex work counted for the package, with `kind`
     (zenodo/joss/other), `doi`, `openalex_id`, `publication_year` and
     `citations_by_year`. `impact_factors()` uses these.
