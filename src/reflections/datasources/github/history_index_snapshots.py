@@ -1,12 +1,13 @@
 """Read and write page-checkpointed full-history indexes."""
 
-from datetime import datetime
 import json
+from datetime import datetime
 from pathlib import Path
 
 from .models import HistoryIndexRecord, HistoryIndexSnapshot
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSIONS = {1, SCHEMA_VERSION}
 
 
 def save_history_index(snapshot: HistoryIndexSnapshot, path: str | Path) -> Path:
@@ -27,7 +28,7 @@ def load_history_index(path: str | Path) -> HistoryIndexSnapshot:
     """Load a history-index snapshot."""
 
     data = json.loads(Path(path).read_text(encoding="utf-8"))
-    if data.get("schema_version") != SCHEMA_VERSION:
+    if data.get("schema_version") not in SUPPORTED_SCHEMA_VERSIONS:
         version = data.get("schema_version")
         raise ValueError(f"Unsupported history index schema: {version}")
     return HistoryIndexSnapshot(
@@ -36,6 +37,8 @@ def load_history_index(path: str | Path) -> HistoryIndexSnapshot:
         entity_type=data["entity_type"],
         fetched_at=datetime.fromisoformat(data["fetched_at"]),
         next_page=data["next_page"],
+        next_url=data.get("next_url"),
+        source_endpoint=data.get("source_endpoint"),
         complete=data["complete"],
         requests_used=data["requests_used"],
         rate_remaining=data["rate_remaining"],
@@ -50,6 +53,8 @@ def _to_dict(snapshot: HistoryIndexSnapshot) -> dict:
         "entity_type": snapshot.entity_type,
         "fetched_at": snapshot.fetched_at.isoformat(),
         "next_page": snapshot.next_page,
+        "next_url": snapshot.next_url,
+        "source_endpoint": snapshot.source_endpoint,
         "complete": snapshot.complete,
         "requests_used": snapshot.requests_used,
         "rate_remaining": snapshot.rate_remaining,

@@ -84,6 +84,8 @@ Every raw collection unit should record:
 - first and last observed event;
 - fetched and last-updated timestamps;
 - next page or item checkpoint;
+- the complete GitHub continuation URL when pagination uses a cursor;
+- source endpoint, including any documented fallback;
 - collected and expected counts when known;
 - completion state and failure message;
 - core quota before and after collection.
@@ -144,3 +146,19 @@ The command reads the authoritative local cohort, skips completed indexes and
 previously recorded repository-level failures, and writes
 `data/derived/history_index_manifest.csv`. Use `--retry-failures` only after a
 recorded repository or API problem has been investigated.
+
+The collector follows GitHub's complete `rel="next"` URL rather than assuming
+that every endpoint uses numbered pages. This supports both page-based and
+cursor-based pagination and preserves the cursor in partial checkpoints. Old
+version 1 checkpoints remain readable; a checkpoint at GitHub's 10,000-result
+boundary re-reads its last successful page once to recover the cursor.
+
+If the pull-request list endpoint returns 404 before yielding any records, the
+collector falls back to the repository-issues endpoint and retains only items
+marked as pull requests. The manifest records `issues` as the source endpoint.
+Fields unavailable from that fallback, such as draft state and review-comment
+count, remain null rather than being interpreted as false or zero.
+
+The initial Tier 1 cohort run completed indexes for all 70 repositories: 20,058
+issues and 40,251 pull requests. MovingPandas used the audited issues-endpoint
+fallback and returned no historical pull-request records.

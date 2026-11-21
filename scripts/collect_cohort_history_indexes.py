@@ -2,10 +2,10 @@
 
 import argparse
 import csv
-from datetime import UTC, datetime
 import json
-from pathlib import Path
 import sys
+from datetime import UTC, datetime
+from pathlib import Path
 
 from github import GithubException
 from requests import RequestException

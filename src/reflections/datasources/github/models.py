@@ -171,10 +171,12 @@ class HistoryIndexSnapshot:
     fetched_at: datetime
     records: tuple[HistoryIndexRecord, ...] = field(default_factory=tuple)
     next_page: int = 1
+    next_url: str | None = None
+    source_endpoint: str | None = None
     complete: bool = False
     requests_used: int = 0
     rate_remaining: int | None = None
-    schema_version: int = 1
+    schema_version: int = 2
 
 
 @dataclass(frozen=True)

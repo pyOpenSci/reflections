@@ -1,5 +1,6 @@
-from datetime import UTC, datetime
 import json
+
+from github import GithubException
 
 from reflections.analysis.history_index_manifest import history_index_manifest
 from reflections.datasources.github import (
@@ -17,9 +18,13 @@ class FakeGithub:
 
     def requestJsonAndCheck(self, method, url, parameters):
         assert method == "GET"
-        assert url == "/repos/org/project/issues"
-        assert parameters["per_page"] == 100
-        return next(self.responses)
+        assert str(parameters.get("per_page")) == "100"
+        self.last_url = url
+        self.last_parameters = parameters
+        response = next(self.responses)
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 def issue(number):
@@ -38,8 +43,8 @@ def issue(number):
 
 def test_history_index_resumes_by_page_and_round_trips(tmp_path):
     first_headers = {
-        "link": '<https://api.github.com/x?page=2>; rel="next", '
-        '<https://api.github.com/x?page=2>; rel="last"',
+        "link": '<https://api.github.com/x?per_page=100&page=2>; rel="next", '
+        '<https://api.github.com/x?per_page=100&page=2>; rel="last"',
         "x-ratelimit-remaining": "998",
     }
     first = collect_history_index(
@@ -51,6 +56,7 @@ def test_history_index_resumes_by_page_and_round_trips(tmp_path):
     )
     assert not first.complete
     assert first.next_page == 2
+    assert first.next_url == "https://api.github.com/x?per_page=100&page=2"
     assert first.requests_used == 1
 
     path = save_history_index(first, tmp_path / "issues.partial.json")
@@ -68,6 +74,69 @@ def test_history_index_resumes_by_page_and_round_trips(tmp_path):
     assert second.next_page == 3
     assert second.requests_used == 2
     assert [item.number for item in second.records] == [1, 2]
+
+
+def test_history_index_follows_cursor_link():
+    cursor_url = (
+        "https://api.github.com/repositories/1/issues"
+        "?state=all&per_page=100&after=opaque-cursor"
+    )
+    first = collect_history_index(
+        "org/project",
+        "issues",
+        github=FakeGithub(
+            [
+                (
+                    {
+                        "link": f'<{cursor_url}>; rel="next"',
+                        "x-ratelimit-remaining": "998",
+                    },
+                    [issue(1)],
+                )
+            ]
+        ),
+        request_budget=1,
+        quota_floor=500,
+    )
+    github = FakeGithub([({}, [issue(2)])])
+
+    complete = collect_history_index(
+        "org/project",
+        "issues",
+        github=github,
+        existing_snapshot=first,
+        request_budget=1,
+        quota_floor=500,
+    )
+
+    assert complete.complete
+    assert github.last_url == "/repositories/1/issues"
+    assert github.last_parameters["after"] == "opaque-cursor"
+
+
+def test_pull_request_index_falls_back_to_issue_stream_after_404():
+    pull = issue(1) | {"pull_request": {"url": "https://api.github.com/pulls/1"}}
+    github = FakeGithub(
+        [
+            GithubException(404, "Not Found"),
+            ({"x-ratelimit-remaining": "997"}, [issue(2), pull]),
+        ]
+    )
+
+    snapshot = collect_history_index(
+        "org/project",
+        "pull_requests",
+        github=github,
+        request_budget=2,
+        quota_floor=500,
+    )
+
+    assert snapshot.complete
+    assert snapshot.source_endpoint == "issues"
+    assert snapshot.requests_used == 2
+    assert [item.number for item in snapshot.records] == [1]
+    assert snapshot.records[0].review_comment_count is None
+    assert snapshot.records[0].is_draft is None
 
 
 def test_history_index_manifest_includes_missing_and_complete(tmp_path):
@@ -101,3 +170,23 @@ def test_history_index_manifest_records_failed_collection(tmp_path):
 
     assert pull_request["status"] == "failed"
     assert pull_request["error"] == "404 Not Found"
+
+
+def test_history_index_manifest_records_fallback_source(tmp_path):
+    snapshot = collect_history_index(
+        "org/project",
+        "pull_requests",
+        github=FakeGithub(
+            [GithubException(404, "Not Found"), ({}, [])]
+        ),
+        request_budget=2,
+        quota_floor=500,
+    )
+    save_history_index(snapshot, tmp_path / "pull_requests/org--project.json")
+
+    manifest = history_index_manifest(["org/project"], tmp_path)
+    pull_request = manifest.loc[
+        manifest["entity_type"] == "pull_requests"
+    ].iloc[0]
+
+    assert pull_request["source_endpoint"] == "issues"
