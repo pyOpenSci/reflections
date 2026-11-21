@@ -1,4 +1,4 @@
-"""Build figures from maintainer activity and roster-coverage CSVs."""
+"""Internal maintainer figure build command."""
 
 import argparse
 from pathlib import Path

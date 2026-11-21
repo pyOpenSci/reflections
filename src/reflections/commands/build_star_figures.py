@@ -1,4 +1,4 @@
-"""Build star-history figures from the daily aggregate CSV."""
+"""Internal star figure build command."""
 
 import argparse
 import math

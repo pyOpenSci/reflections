@@ -1,4 +1,4 @@
-"""Build cohort-profile figures from the local cohort CSV."""
+"""Internal cohort figure build command."""
 
 import argparse
 from pathlib import Path

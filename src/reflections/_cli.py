@@ -121,20 +121,34 @@ def _parser() -> argparse.ArgumentParser:
     )
 
     collect = commands.add_parser("collect", help="resume GitHub collection")
-    collect.add_argument("target", choices=("indexes", "comments"))
+    collect.add_argument(
+        "target",
+        choices=("cohort", "commits", "comments", "indexes", "maintainers", "stars"),
+    )
     collect.add_argument("--cohort", type=Path, default=Path("data/derived/cohort.csv"))
     collect.add_argument("--request-budget", type=int, default=100)
     collect.add_argument("--quota-floor", type=int, default=1000)
     collect.add_argument("--retry-failures", action="store_true")
+    collect.add_argument("--refresh", action="store_true")
+    collect.add_argument("--limit", type=int)
+    collect.add_argument("--window-days", type=int)
+    collect.add_argument("--minimum-post-acceptance-days", type=int)
+    collect.add_argument("--check-auth", action="store_true")
+    collect.add_argument("--output", type=Path)
+    collect.add_argument("--roster", type=Path)
     collect.add_argument(
         "--entity",
         help="one entity type instead of both supported types",
     )
 
     analyze = commands.add_parser("analyze", help="rebuild local GitHub analyses")
-    analyze.add_argument("target", choices=("github",))
+    analyze.add_argument(
+        "target", choices=("all", "cohort", "commits", "github", "maintainers", "stars")
+    )
     analyze.add_argument("--windows", type=int, nargs="+", default=(90, 180, 365))
     analyze.add_argument("--response-horizon", type=int, default=30)
+    analyze.add_argument("--exclude-merges", action="store_true")
+    analyze.add_argument("--exclude-bots", action="store_true")
     analyze.add_argument(
         "--dry-run",
         action="store_true",
@@ -178,6 +192,9 @@ def _print_status(label, manifest, entity_column):
 
 
 def _collect(args) -> int:
+    if args.target not in {"indexes", "comments"}:
+        return subprocess.run(collection_command(args), check=False).returncode
+
     from reflections.analysis.history_index_manifest import (
         write_history_index_manifest,
     )
@@ -256,15 +273,75 @@ def _analyze(args) -> int:
         raise SystemExit("--windows must contain positive integers")
     if args.response_horizon <= 0:
         raise SystemExit("--response-horizon must be positive")
-    commands = github_analysis_commands(
-        args.windows,
-        response_horizon=args.response_horizon,
-    )
+    commands = analysis_commands(args)
     for command in commands:
         print(" ".join(command), flush=True)
         if not args.dry_run:
             subprocess.run(command, check=True)
     return 0
+
+
+def collection_command(args) -> tuple[str, ...]:
+    """Return the private command for a non-Tier collection target."""
+
+    modules = {
+        "cohort": "collect_cohort_metadata",
+        "commits": "collect_commit_activity",
+        "maintainers": "collect_maintainer_activity",
+        "stars": "collect_star_history",
+    }
+    command = [sys.executable, "-m", f"reflections.commands.{modules[args.target]}"]
+    for option in ("output", "roster", "limit", "window_days", "minimum_post_acceptance_days"):
+        value = getattr(args, option)
+        if value is not None:
+            command.extend((f"--{option.replace('_', '-')}", str(value)))
+    for flag in ("refresh", "check_auth"):
+        if getattr(args, flag):
+            command.append(f"--{flag.replace('_', '-')}")
+    return tuple(command)
+
+
+def analysis_commands(args) -> tuple[tuple[str, ...], ...]:
+    """Return the local build sequence for an analysis target."""
+
+    python = sys.executable
+    domain_commands = {
+        "cohort": (
+            (python, "-m", "reflections.commands.build_cohort_dataset"),
+            (python, "-m", "reflections.commands.build_cohort_figures"),
+        ),
+        "commits": (
+            (python, "-m", "reflections.commands.build_commit_dataset"),
+            (
+                python,
+                "-m",
+                "reflections.commands.build_commit_figures",
+                *(() if not args.exclude_merges else ("--exclude-merges",)),
+                *(() if not args.exclude_bots else ("--exclude-bots",)),
+            ),
+        ),
+        "maintainers": (
+            (python, "-m", "reflections.commands.build_maintainer_dataset"),
+            (python, "-m", "reflections.commands.build_maintainer_figures"),
+        ),
+        "stars": (
+            (python, "-m", "reflections.commands.build_star_dataset"),
+            (python, "-m", "reflections.commands.build_star_figures"),
+        ),
+    }
+    github = github_analysis_commands(
+        args.windows,
+        response_horizon=args.response_horizon,
+    )
+    if args.target == "github":
+        return github
+    if args.target == "all":
+        return tuple(
+            command
+            for target in ("cohort", "commits", "stars", "maintainers")
+            for command in domain_commands[target]
+        ) + github
+    return domain_commands[args.target]
 
 
 def github_analysis_commands(

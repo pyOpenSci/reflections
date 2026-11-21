@@ -1,4 +1,4 @@
-"""Build a commit-level CSV from local commit snapshots."""
+"""Internal commit dataset build command."""
 
 import argparse
 from pathlib import Path

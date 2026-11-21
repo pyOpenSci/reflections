@@ -1,4 +1,4 @@
-"""Build a daily star-history CSV from local aggregate snapshots."""
+"""Internal star dataset build command."""
 
 import argparse
 from pathlib import Path

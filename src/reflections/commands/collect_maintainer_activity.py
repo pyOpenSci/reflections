@@ -1,9 +1,9 @@
-"""Collect recent public GitHub activity for accepted-package maintainers."""
+"""Internal maintainer activity collection command."""
 
 import argparse
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-import sys
 
 from github import RateLimitExceededException
 
@@ -115,7 +115,7 @@ def main() -> int:
         except RateLimitExceededException:
             progress.finish_message("rate limited")
             return 2
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001 - continue with the cohort
             failures += 1
             print(f"@{login}: failed: {error}", file=sys.stderr)
 

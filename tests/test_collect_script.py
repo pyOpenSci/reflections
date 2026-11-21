@@ -7,7 +7,10 @@ from unittest.mock import patch
 
 from reflections._cli import (
     ProgressBar,
+    _parser,
     _selected_entities,
+    analysis_commands,
+    collection_command,
     github_analysis_commands,
     github_token,
 )
@@ -68,6 +71,28 @@ class ProjectCommandTests(unittest.TestCase):
         self.assertEqual(_selected_entities("issues", supported), ("issues",))
         with self.assertRaisesRegex(SystemExit, "--entity must be one of"):
             _selected_entities("review_comments", supported)
+
+    def test_non_tier_collection_uses_private_command(self):
+        args = _parser().parse_args(
+            ["collect", "commits", "--window-days", "365", "--limit", "2"]
+        )
+
+        command = collection_command(args)
+
+        self.assertIn("reflections.commands.collect_commit_activity", command)
+        self.assertEqual(command[-4:], ("--limit", "2", "--window-days", "365"))
+
+    def test_all_analysis_includes_each_domain_and_tiers(self):
+        args = _parser().parse_args(["analyze", "all", "--windows", "90"])
+
+        commands = analysis_commands(args)
+
+        modules = {command[2] for command in commands}
+        self.assertIn("reflections.commands.build_cohort_dataset", modules)
+        self.assertIn("reflections.commands.build_commit_dataset", modules)
+        self.assertIn("reflections.commands.build_star_dataset", modules)
+        self.assertIn("reflections.commands.build_maintainer_dataset", modules)
+        self.assertIn("reflections.commands.build_tier2_figures", modules)
 
 
 if __name__ == "__main__":

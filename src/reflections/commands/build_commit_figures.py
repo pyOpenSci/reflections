@@ -1,4 +1,4 @@
-"""Build before/after commit-activity figures from the commit-level CSV."""
+"""Internal commit figure build command."""
 
 import argparse
 import math

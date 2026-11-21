@@ -1,4 +1,4 @@
-"""Build the cohort-level CSV from cached metadata snapshots."""
+"""Internal cohort dataset build command."""
 
 import argparse
 from pathlib import Path

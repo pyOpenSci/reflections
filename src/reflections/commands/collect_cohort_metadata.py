@@ -1,4 +1,4 @@
-"""Collect submission and repository dates for the accepted-package cohort."""
+"""Internal cohort metadata collection command."""
 
 import argparse
 import sys

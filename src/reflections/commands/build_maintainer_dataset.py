@@ -1,8 +1,8 @@
-"""Build maintainer activity and roster-coverage CSVs from local snapshots."""
+"""Internal maintainer dataset build command."""
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from reflections import (
     load_maintainer_activity,

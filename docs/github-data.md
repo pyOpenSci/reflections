@@ -10,9 +10,8 @@ for collection and rebuild commands.
 ## Cohort metadata
 
 ```console
-uv run python scripts/collect_cohort_metadata.py
-uv run python scripts/build_cohort_dataset.py
-uv run python scripts/build_cohort_figures.py
+uv run reflections collect cohort
+uv run --extra analysis reflections analyze cohort
 ```
 
 The cohort collector reads the cached accepted-package roster and stores one
@@ -39,9 +38,8 @@ bounded prototype.
 ## Star history
 
 ```console
-uv run python scripts/collect_star_history.py
-uv run python scripts/build_star_dataset.py
-uv run python scripts/build_star_figures.py
+uv run reflections collect stars
+uv run --extra analysis reflections analyze stars
 ```
 
 Aggregate star snapshots are stored in `data/github/stars/`. Collection uses
@@ -55,9 +53,8 @@ resume.
 ## Maintainer activity
 
 ```console
-uv run python scripts/collect_maintainer_activity.py
-uv run python scripts/build_maintainer_dataset.py
-uv run python scripts/build_maintainer_figures.py
+uv run reflections collect maintainers
+uv run --extra analysis reflections analyze maintainers
 ```
 
 The authoritative review-time roster comes from `All current maintainers` in
@@ -77,9 +74,8 @@ package inactivity.
 ## Commit activity
 
 ```console
-uv run python scripts/collect_commit_activity.py
-uv run python scripts/build_commit_dataset.py
-uv run python scripts/build_commit_figures.py
+uv run reflections collect commits
+uv run --extra analysis reflections analyze commits
 ```
 
 Commit snapshots are stored in `data/github/commits/`. The derived table is
@@ -102,7 +98,7 @@ before/after count, and relative monthly activity plots. Merge and bot commits
 can be excluded without recollecting data:
 
 ```console
-uv run python scripts/build_commit_figures.py --exclude-merges --exclude-bots
+uv run --extra analysis reflections analyze commits --exclude-merges --exclude-bots
 ```
 
 Both collectors show API quota and progress. Partial snapshots are safe to
