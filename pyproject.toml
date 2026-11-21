@@ -4,6 +4,16 @@ version = "0.1.0"
 description = "A pyOpenSci project for reflecting on package status (PoC)"
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+keywords = ["open source", "package maintenance", "pyOpenSci", "research software"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 dependencies = [
     "packaging>=26.3",
     "pandas>=3.1.1",
@@ -15,6 +25,16 @@ analysis = [
     "cmcrameri>=1.9",
     "matplotlib>=3.11.2",
 ]
+
+[dependency-groups]
+test = [
+    "pytest>=9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/pyOpenSci/reflections"
+Issues = "https://github.com/pyOpenSci/reflections/issues"
+Repository = "https://github.com/pyOpenSci/reflections"
 
 [project.scripts]
 reflections = "reflections:main"

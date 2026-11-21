@@ -11,7 +11,7 @@ concept being developed by the pyOpenSci community.
 Install the locked development environment:
 
 ```console
-uv sync
+uv sync --group test
 ```
 
 Some data sources require authentication. For GitHub, set a token in your
@@ -29,5 +29,11 @@ a much lower rate limit. `.env` files are ignored by Git.
 Run the test suite with:
 
 ```console
-uv run --with pytest pytest -q
+uv run pytest -q
 ```
+
+## Community
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development workflow. Participation in this project is governed by the
+[pyOpenSci Code of Conduct](CODE_OF_CONDUCT.md).
