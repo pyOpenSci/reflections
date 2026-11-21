@@ -276,5 +276,13 @@ uv run --extra analysis python scripts/build_tier2_window_summary.py
 ```
 
 All of these steps use only the local Tier 1 and Tier 2 caches and make no
-GitHub API requests. When collection finishes, rerun the commands so every
-window is based on the same final set of complete streams.
+GitHub API requests. After any collection refresh, rerun the commands so every
+window is based on the same set of complete streams.
+
+The completed collection contains review-comment streams for all 70
+repositories and complete issue-comment streams for 68. MovingPandas returned
+404 for the repository issue-comment endpoint. Astropy returned 30,000 issue
+comments before GitHub stopped offset pagination for the endpoint, so that
+stream remains explicitly partial. The response analysis excludes both
+repositories rather than treating incomplete comment histories as
+nonresponses. The coverage audit records both exceptions.

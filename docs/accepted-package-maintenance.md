@@ -290,11 +290,13 @@ requirements exclude more recently accepted packages.
 
 ### Maintainer responsiveness remains broadly stable as activity declines
 
-> **Interim analysis:** Tier 2 interaction collection is still running. The
-> current rebuild includes 55 of 70 repositories with complete streams for
-> both issue and pull-request analysis; 52 of those repositories have enough
-> follow-up for the 365-day comparison. The remaining repositories could still
-> change these estimates.
+> **Collection coverage:** Tier 2 collection is complete for 68 of 70
+> repositories. MovingPandas is excluded because its repository issue-comment
+> endpoint returned 404, and Astropy is excluded because GitHub stopped
+> repository issue-comment pagination at its 30,000-record limit. Neither
+> incomplete stream is treated as evidence of no response. Of the 68
+> analysis-ready repositories, 62, 59, and 52 have sufficient follow-up for
+> the 90-, 180-, and 365-day comparisons, respectively.
 
 Tier 2 adds the timing and authorship of repository-wide comments to the Tier 1
 issue and pull-request indexes. For issues, the response metric is the first
@@ -323,15 +325,15 @@ Across the substantially expanded Tier 2 sample, the probability of receiving
 a qualifying maintainer comment within 30 days does not decline alongside the
 lower volume of issues and pull requests. The estimated issue response is
 higher after acceptance at all three window lengths, with differences of about
-seven to eight percentage points. Pull-request response is modestly higher in
+seven to nine percentage points. Pull-request response is modestly higher in
 the 90- and 180-day comparisons and modestly lower in the 365-day comparison.
 The long-window pull-request difference is less than two percentage points and
 does not support a large change in either direction.
 
 | Window | Eligible repositories | Matched issues | Issue response, before → after | Matched PRs | PR response, before → after |
 | ---: | ---: | ---: | ---: | ---: | ---: |
-| 90 days | 55 | 883 | 36.8% → 43.9% | 1,966 | 48.3% → 51.6% |
-| 180 days | 55 | 1,854 | 34.9% → 43.3% | 4,074 | 50.2% → 53.4% |
+| 90 days | 62 | 938 | 34.4% → 43.0% | 2,036 | 48.4% → 51.4% |
+| 180 days | 59 | 1,861 | 34.9% → 43.0% | 4,104 | 50.0% → 52.8% |
 | 365 days | 52 | 3,709 | 34.7% → 41.6% | 7,991 | 56.1% → 54.2% |
 
 Response speed among items with an observed qualifying comment is also
@@ -346,7 +348,7 @@ observed qualifying comment.
 | --- | --- |
 | ![Cumulative maintainer-comment response for issues](../figures/cohort/tier2_90_days/issues_cumulative_comment_response.png) | ![Thirty-day maintainer-comment response rates for issues](../figures/cohort/tier2_90_days/issues_comment_response_rate_30_days.png) |
 
-*Figure 14. Interim issue comment-response results in matched 90-day
+*Figure 14. Issue comment-response results in matched 90-day
 windows. The left panel estimates cumulative response while accounting for
 censoring; the right panel shows repository-level 30-day response rates among
 assessable issues. Only repositories with complete issue-comment streams are
@@ -356,7 +358,7 @@ included.*
 | --- | --- |
 | ![Cumulative maintainer-comment response for pull requests](../figures/cohort/tier2_90_days/pull_requests_cumulative_comment_response.png) | ![Thirty-day maintainer-comment response rates for pull requests](../figures/cohort/tier2_90_days/pull_requests_comment_response_rate_30_days.png) |
 
-*Figure 15. Interim pull-request comment-response results in matched
+*Figure 15. Pull-request comment-response results in matched
 90-day windows. Conversation and inline review comments are included, but
 formal submitted reviews are not. Only repositories with both required
 comment streams complete are included.*
