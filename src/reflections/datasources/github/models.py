@@ -42,42 +42,6 @@ class CohortMetadataSnapshot:
 
 
 @dataclass(frozen=True)
-class ResponseEvent:
-    """An activity on a pull request that could constitute a response."""
-
-    kind: str
-    created_at: datetime
-    author_login: str | None
-    author_association: str | None
-
-
-@dataclass(frozen=True)
-class PullRequestRecord:
-    """The pull-request fields needed by the initial reflections metrics."""
-
-    number: int
-    title: str
-    url: str
-    author_login: str | None
-    created_at: datetime
-    closed_at: datetime | None
-    merged_at: datetime | None
-    responses: tuple[ResponseEvent, ...] = field(default_factory=tuple)
-
-
-@dataclass(frozen=True)
-class RepositorySnapshot:
-    """A point-in-time collection of repository activity."""
-
-    repository: str
-    accepted_at: datetime
-    fetched_at: datetime
-    pull_requests: tuple[PullRequestRecord, ...] = field(default_factory=tuple)
-    window_days: int | None = None
-    schema_version: int = 2
-
-
-@dataclass(frozen=True)
 class CommitRecord:
     """A commit reachable from a repository's default branch."""
 
@@ -106,41 +70,6 @@ class CommitSnapshot:
     fetched_at: datetime
     window_days: int
     commits: tuple[CommitRecord, ...] = field(default_factory=tuple)
-    schema_version: int = 1
-
-
-@dataclass(frozen=True)
-class IssueEvent:
-    """A timestamped event from an issue timeline."""
-
-    kind: str
-    created_at: datetime
-    actor_login: str | None
-    actor_association: str | None
-
-
-@dataclass(frozen=True)
-class IssueRecord:
-    """The issue fields needed for response and resolution metrics."""
-
-    number: int
-    title: str
-    url: str
-    author_login: str | None
-    created_at: datetime
-    closed_at: datetime | None
-    events: tuple[IssueEvent, ...] = field(default_factory=tuple)
-
-
-@dataclass(frozen=True)
-class IssueSnapshot:
-    """A point-in-time collection of repository issues and timelines."""
-
-    repository: str
-    accepted_at: datetime
-    fetched_at: datetime
-    window_days: int
-    issues: tuple[IssueRecord, ...] = field(default_factory=tuple)
     schema_version: int = 1
 
 

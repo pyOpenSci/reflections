@@ -7,7 +7,6 @@ from .interaction_manifest import (
     interaction_manifest,
     write_interaction_manifest,
 )
-from .issue_tables import ISSUE_COLUMNS, issue_rows, write_issue_csv
 from .maintainer_tables import (
     MAINTAINER_COLUMNS,
     ROSTER_COLUMNS,
@@ -16,7 +15,6 @@ from .maintainer_tables import (
     write_maintainer_csvs,
 )
 from .star_tables import STAR_COLUMNS, star_rows, write_star_csv
-from .tables import PULL_REQUEST_COLUMNS, pull_request_rows, write_pull_request_csv
 from .tier1_tables import (
     TIER1_ISSUE_COLUMNS,
     TIER1_PULL_REQUEST_COLUMNS,
@@ -37,9 +35,7 @@ __all__ = [
     "COHORT_COLUMNS",
     "COMMIT_COLUMNS",
     "INTERACTION_TYPES",
-    "ISSUE_COLUMNS",
     "MAINTAINER_COLUMNS",
-    "PULL_REQUEST_COLUMNS",
     "ROSTER_COLUMNS",
     "STAR_COLUMNS",
     "TIER1_ISSUE_COLUMNS",
@@ -51,9 +47,7 @@ __all__ = [
     "commit_rows",
     "cumulative_response_curve",
     "interaction_manifest",
-    "issue_rows",
     "maintainer_rows",
-    "pull_request_rows",
     "roster_rows",
     "star_rows",
     "tier1_issue_rows",
@@ -62,9 +56,7 @@ __all__ = [
     "write_comment_response_csv",
     "write_commit_csv",
     "write_interaction_manifest",
-    "write_issue_csv",
     "write_maintainer_csvs",
-    "write_pull_request_csv",
     "write_star_csv",
     "write_tier1_issue_csv",
     "write_tier1_pull_request_csv",

@@ -6,7 +6,6 @@ from .client import (
     SubmissionNotFoundError,
     UnsupportedRepositoryHostError,
     UnsupportedRepositoryWarning,
-    collect_repository_snapshot,
     create_github,
     get_accepted_submissions,
     get_submission,
@@ -22,8 +21,6 @@ from .interaction_snapshots import (
     save_interaction_snapshot,
 )
 from .interactions import collect_interaction_stream
-from .issue_snapshots import load_issue_snapshot, save_issue_snapshot
-from .issues import collect_issue_snapshot
 from .maintainer_snapshots import (
     load_maintainer_activity,
     load_maintainer_roster,
@@ -39,19 +36,12 @@ from .models import (
     HistoryIndexSnapshot,
     InteractionRecord,
     InteractionSnapshot,
-    IssueEvent,
-    IssueRecord,
-    IssueSnapshot,
     MaintainerActivitySnapshot,
-    PullRequestRecord,
     RepositoryContribution,
-    RepositorySnapshot,
-    ResponseEvent,
     StarHistoryWeek,
     StarSnapshot,
     Submission,
 )
-from .snapshots import load_snapshot, save_snapshot
 from .star_snapshots import load_star_snapshot, save_star_snapshot
 from .stars import collect_star_snapshot
 
@@ -64,15 +54,9 @@ __all__ = [
     "HistoryIndexSnapshot",
     "InteractionRecord",
     "InteractionSnapshot",
-    "IssueEvent",
-    "IssueRecord",
-    "IssueSnapshot",
     "MaintainerActivitySnapshot",
-    "PullRequestRecord",
     "RepositoryContribution",
     "RepositoryLinkNotFoundError",
-    "RepositorySnapshot",
-    "ResponseEvent",
     "StarHistoryWeek",
     "StarSnapshot",
     "Submission",
@@ -83,9 +67,7 @@ __all__ = [
     "collect_commit_snapshot",
     "collect_history_index",
     "collect_interaction_stream",
-    "collect_issue_snapshot",
     "collect_maintainer_activity",
-    "collect_repository_snapshot",
     "collect_star_snapshot",
     "create_github",
     "get_accepted_submissions",
@@ -94,18 +76,14 @@ __all__ = [
     "load_commit_snapshot",
     "load_history_index",
     "load_interaction_snapshot",
-    "load_issue_snapshot",
     "load_maintainer_activity",
     "load_maintainer_roster",
-    "load_snapshot",
     "load_star_snapshot",
     "save_cohort_metadata",
     "save_commit_snapshot",
     "save_history_index",
     "save_interaction_snapshot",
-    "save_issue_snapshot",
     "save_maintainer_activity",
     "save_maintainer_roster",
-    "save_snapshot",
     "save_star_snapshot",
 ]

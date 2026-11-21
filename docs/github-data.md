@@ -31,10 +31,10 @@ inline review comments in `data/github/interactions/`. The derived tables retain
 open and unanswered items with explicit censoring fields and can be rebuilt for
 90-, 180-, or 365-day matched windows without querying GitHub again.
 
-The package still contains tested models and metrics for hydrated formal PR
-reviews and issue timeline actions. Those are reserved as possible Tier 3
-groundwork; they are not part of the current authoritative collection or
-analysis workflow.
+Formal reviews and issue timeline actions are not collected by the current
+workflow. If the Tier 1 and Tier 2 results prove insufficient, Tier 3 should be
+implemented from the analytic requirements rather than retaining the earlier
+bounded prototype.
 
 ## Star history
 
