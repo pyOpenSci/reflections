@@ -501,7 +501,7 @@ patterns, but they constrain the conclusions that can be drawn from them.
 
 ## Planned extensions
 
-Two additions are expected to provide the next major pieces of evidence:
+Three additions are expected to provide the next major pieces of evidence:
 
 1. **A comparison cohort of GitHub repositories.** Accepted packages will be
    compared with packages that did not undergo pyOpenSci review. The matching
@@ -511,6 +511,11 @@ Two additions are expected to provide the next major pieces of evidence:
 2. **PyPI-derived package measures.** Release history, supported Python
    versions, and available measures of package installation or download
    activity will broaden the analysis beyond repository behavior.
+3. **Community adoption and impact measures.** Publication statistics,
+   package-download statistics, and a journal-like index value will be used to
+   examine how pyOpenSci-accepted packages are taken up by the broader
+   community. The construction and interpretation of the index will be defined
+   transparently before it is used in comparisons.
 
 After those data are available, the research questions, cohort definitions,
 and statistical approach will be finalized before results are compared.
