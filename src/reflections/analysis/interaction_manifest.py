@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from reflections.datasources.github import load_interaction_snapshot
+from reflections.workflows.github_collection import repository_cache_key
 
 INTERACTION_TYPES = ("issue_comments", "review_comments")
 
@@ -18,7 +19,7 @@ def interaction_manifest(
 
     rows = []
     for repository in repositories:
-        key = repository.replace("/", "--").casefold()
+        key = repository_cache_key(repository)
         for interaction_type in INTERACTION_TYPES:
             final_path = directory / interaction_type / f"{key}.json"
             partial_path = final_path.with_suffix(".partial.json")

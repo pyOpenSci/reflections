@@ -1,8 +1,6 @@
 """Build full-history issue and PR tables from local Tier 1 indexes."""
 
 import argparse
-import csv
-from datetime import datetime
 from pathlib import Path
 
 from reflections import (
@@ -10,6 +8,7 @@ from reflections import (
     write_tier1_issue_csv,
     write_tier1_pull_request_csv,
 )
+from reflections.workflows import load_cohort, repository_cache_key
 
 
 def parse_args() -> argparse.Namespace:
@@ -38,7 +37,13 @@ def main() -> int:
     args = parse_args()
     if args.window_days <= 0:
         raise SystemExit("--window-days must be positive")
-    repositories, accepted_at, packages = _cohort(args.cohort)
+    try:
+        cohort = load_cohort(args.cohort)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    repositories = [item.repository for item in cohort]
+    accepted_at = {item.repository: item.accepted_at for item in cohort}
+    packages = {item.repository: item.package for item in cohort}
     issue_snapshots = _snapshots(args.indexes, "issues", repositories)
     pull_request_snapshots = _snapshots(
         args.indexes,
@@ -80,27 +85,10 @@ def main() -> int:
     return 0
 
 
-def _cohort(path: Path):
-    with path.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
-    if not rows:
-        raise SystemExit(f"No repositories found in {path}")
-    repositories = [row["repository"] for row in rows]
-    if len({repository.casefold() for repository in repositories}) != len(
-        repositories
-    ):
-        raise SystemExit(f"Duplicate repositories found in {path}")
-    return (
-        repositories,
-        {row["repository"]: datetime.fromisoformat(row["accepted_at"]) for row in rows},
-        {row["repository"]: row["package"] for row in rows},
-    )
-
-
 def _snapshots(directory: Path, entity: str, repositories: list[str]):
     snapshots = []
     for repository in repositories:
-        key = repository.replace("/", "--").casefold()
+        key = repository_cache_key(repository)
         path = directory / entity / f"{key}.json"
         if not path.exists():
             raise SystemExit(f"Missing complete Tier 1 snapshot: {path}")

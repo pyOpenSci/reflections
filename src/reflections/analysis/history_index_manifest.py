@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from reflections.datasources.github import load_history_index
+from reflections.workflows.github_collection import repository_cache_key
 
 
 def history_index_manifest(
@@ -16,7 +17,7 @@ def history_index_manifest(
 
     rows = []
     for repository in repositories:
-        key = repository.replace("/", "--").casefold()
+        key = repository_cache_key(repository)
         for entity in ("issues", "pull_requests"):
             final_path = directory / entity / f"{key}.json"
             partial_path = final_path.with_suffix(".partial.json")

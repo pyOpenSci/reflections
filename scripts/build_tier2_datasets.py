@@ -3,7 +3,6 @@
 import argparse
 import csv
 import json
-from datetime import datetime
 from pathlib import Path
 
 from reflections import (
@@ -12,6 +11,7 @@ from reflections import (
     write_comment_response_csv,
 )
 from reflections.analysis.tier2_tables import comment_response_rows
+from reflections.workflows import load_cohort, repository_cache_key
 
 COVERAGE_COLUMNS = (
     "repository",
@@ -70,15 +70,18 @@ def main() -> int:
     args = parse_args()
     if args.window_days <= 0:
         raise SystemExit("--window-days must be positive")
-    cohort = _cohort(args.cohort)
+    try:
+        cohort = load_cohort(args.cohort)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
     issue_rows = []
     pr_rows = []
     coverage_rows = []
     for cohort_row in cohort:
-        repository = cohort_row["repository"]
-        package = cohort_row["package"]
-        acceptance = datetime.fromisoformat(cohort_row["accepted_at"])
-        key = repository.replace("/", "--").casefold()
+        repository = cohort_row.repository
+        package = cohort_row.package
+        acceptance = cohort_row.accepted_at
+        key = repository_cache_key(repository)
         issues = _index(args.indexes, "issues", key)
         pull_requests = _index(args.indexes, "pull_requests", key)
         issue_comments, issue_status, issue_error = _interaction(
@@ -140,14 +143,6 @@ def main() -> int:
     )
     print(f"Wrote coverage audit to {args.coverage_output}")
     return 0
-
-
-def _cohort(path):
-    with path.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
-    if not rows:
-        raise SystemExit(f"No repositories found in {path}")
-    return rows
 
 
 def _index(directory, entity, key):

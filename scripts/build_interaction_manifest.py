@@ -1,10 +1,10 @@
 """Build the cohort-wide interaction collection manifest."""
 
 import argparse
-import csv
 from pathlib import Path
 
 from reflections.analysis.interaction_manifest import write_interaction_manifest
+from reflections.workflows import read_repositories
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,10 +25,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    with args.cohort.open(newline="", encoding="utf-8") as stream:
-        repositories = [row["repository"] for row in csv.DictReader(stream)]
-    if not repositories:
-        raise SystemExit(f"No repositories found in {args.cohort}")
+    try:
+        repositories = read_repositories(args.cohort)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
     path = write_interaction_manifest(repositories, args.input, args.output)
     print(f"Wrote interaction manifest to {path}")
     return 0
