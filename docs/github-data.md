@@ -1,8 +1,11 @@
 # GitHub data workflows
 
-The GitHub data source maintains independent snapshots for pull-request
-responses, commit activity, and issue timelines. Collecting one does not
-invalidate or repeat the others.
+The GitHub data source maintains independent snapshots for repository event
+indexes, comment interactions, commits, stars, maintainers, and cohort
+metadata. Collecting one does not invalidate or repeat the others. The Tier 1
+event indexes and Tier 2 interaction streams are the authoritative issue and
+pull-request workflow; see [full-history collection](full-history-collection.md)
+for collection and rebuild commands.
 
 ## Cohort metadata
 
@@ -20,37 +23,18 @@ default-branch commit timestamp. Collection is resumable and existing
 snapshots are reused unless `--refresh` is supplied. The cohort figure builder
 writes presentation-ready profile figures to `figures/cohort/`.
 
-## Pull-request responses
+## Issues and pull requests
 
-```console
-uv run python scripts/collect_accepted_packages.py
-uv run python scripts/build_pr_dataset.py
-uv run python scripts/build_figures.py
-```
+Tier 1 stores complete lightweight issue and pull-request indexes in
+`data/github/history_indexes/`. Tier 2 stores repository-wide conversation and
+inline review comments in `data/github/interactions/`. The derived tables retain
+open and unanswered items with explicit censoring fields and can be rebuilt for
+90-, 180-, or 365-day matched windows without querying GitHub again.
 
-Pull-request snapshots are stored in `data/github/`. The derived table is
-`data/derived/pull_requests.csv`. It includes first-response time, time to
-close, time to merge, outcome, and censoring fields. Open PRs are retained:
-their `observed_open_days` runs through the snapshot date and
-`resolution_censored` is true. The median-close figure is explicitly limited
-to closed PRs; use the censoring fields for survival analyses that compare all
-PRs.
-
-## Issue response and resolution
-
-```console
-uv run python scripts/collect_issue_activity.py
-uv run python scripts/build_issue_dataset.py
-uv run python scripts/build_issue_figures.py
-```
-
-Issue snapshots are stored in `data/github/issues/`; pull requests returned by
-GitHub's Issues API are excluded. The derived `data/derived/issues.csv` keeps
-separate times for the first maintainer acknowledgement, first triage action,
-first of either ("addressed"), and closure. Acknowledgement means a comment by
-an owner, member, or collaborator. Triage means a label, assignment, milestone,
-or closure action by someone other than the issue author or a bot. Open and
-unaddressed issues remain in the table with censoring fields.
+The package still contains tested models and metrics for hydrated formal PR
+reviews and issue timeline actions. Those are reserved as possible Tier 3
+groundwork; they are not part of the current authoritative collection or
+analysis workflow.
 
 ## Star history
 

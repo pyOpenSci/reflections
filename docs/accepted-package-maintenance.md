@@ -153,45 +153,45 @@ the other available metrics.
 
 ### Pull-request activity declines, while observed responses remain common
 
-Pull-request volume follows a pattern similar to commit activity. Across 65
-repositories represented in the matched windows, the median number of pull
-requests decreased from 41 before acceptance to 12 after acceptance. This
+Pull-request volume follows a pattern similar to commit activity. Across 64
+repositories eligible for the matched 90-day windows, the median number of pull
+requests decreased from 12 before acceptance to 4 after acceptance. This
 comparison includes repositories with no pull requests in a period as zeros.
 
-![Distribution of pull requests before and after acceptance](../figures/cohort/pull_requests_coverage.png)
+![Distribution of pull requests before and after acceptance](../figures/cohort/tier1_90_days/pull_requests_coverage.png)
 
 *Figure 5. Distribution of repository-level pull-request counts in the
 matched windows before and after acceptance. Boxes show the median and
 interquartile range, and points represent individual repositories.*
 
 The cumulative-response curves provide a complementary view of maintenance.
-About 41% of pull requests opened after acceptance had an observed maintainer
-response within 30 days, compared with about 33% before acceptance. This
+An estimated 51.4% of pull requests opened after acceptance received a
+qualifying maintainer comment within 30 days, compared with 48.4% before
+acceptance. This
 descriptive difference does not establish that acceptance improved response
 behavior, but it does show that the lower post-acceptance activity was not
 accompanied by an absence of maintainer engagement.
 
-![Cumulative share of pull requests with an observed maintainer response](../figures/cohort/pull_requests_cumulative_response.png)
+![Cumulative share of pull requests with an observed maintainer response](../figures/cohort/tier2_90_days/pull_requests_cumulative_comment_response.png)
 
-*Figure 6. Cumulative share of pull requests with an observed maintainer
-response during the first 30 days after opening. Line color and style
-distinguish pull requests opened before and after acceptance.*
+*Figure 6. Censoring-aware cumulative estimate of pull requests receiving a
+qualifying maintainer comment during the first 30 days after opening. Line
+color and style distinguish pull requests opened before and after acceptance.*
 
 ### Issue activity declines in the matched windows
 
-The rebuilt issue dataset covers 68 repositories. The median number of issues
-decreased from 20.5 before acceptance to 4.5 after acceptance, a pattern
-consistent with the decline in commits and pull requests. Among repositories
-with observations in both periods, the median change in time until an issue
-was first addressed was 0.2 days across 35 repositories, while the median
-change in issue close time was 6.8 days across 45 repositories. These timing
-results describe observed issues and do not account for differences in issue
-complexity or composition between periods.
+Across the 64 repositories eligible for the matched 90-day windows, the median
+number of issues decreased from 4 before acceptance to 1.5 after acceptance, a
+pattern consistent with the decline in commits and pull requests. Among the 31
+repositories with closed issues in both periods, the median within-repository
+change in issue close time was 1.31 days longer after acceptance. This timing
+result describes observed closed issues and does not account for differences
+in issue complexity or composition between periods.
 
-![Distribution of issues before and after acceptance](../figures/cohort/issues_coverage.png)
+![Distribution of issues before and after acceptance](../figures/cohort/tier1_90_days/issues_coverage.png)
 
-*Figure 7. Distribution of repository-level issue counts in the matched
-windows before and after acceptance. Sixty-eight repositories are represented,
+*Figure 7. Distribution of repository-level issue counts in matched 90-day
+windows before and after acceptance. Sixty-four repositories are represented,
 and repositories without issues in a period are shown as zero.*
 
 ### Activity declines across 90-, 180-, and 365-day windows
