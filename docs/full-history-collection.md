@@ -128,8 +128,8 @@ Before each expensive tier, the collector should print:
 4. Pilot a filtered bare clone and compare its derived 90-day commit counts
    with the existing API snapshot.
 5. Run Tier 1 across the cohort.
-6. Run interaction tiers incrementally, rebuilding the coverage audit after
-   each quota window.
+6. Run interaction tiers incrementally, rebuilding the collection manifests
+   after each quota window.
 
 The pilot established the request estimates and checkpoint behavior. Resume
 cohort collection in bounded batches through the project CLI:
@@ -199,14 +199,15 @@ The response analysis can be run before collection finishes, but it includes a
 repository only when all interaction streams required for that metric are
 complete. Issue analysis requires a complete issue-comment stream. Pull-request
 analysis requires complete issue-comment and review-comment streams. Partial or
-failed streams are reported in the coverage audit and are never treated as
-evidence of no response.
+failed streams are reported in the Tier 2 coverage table and are never treated
+as evidence of no response.
 
 The combined analysis command builds the Tier 2 response tables after the Tier
 1 activity tables for every requested window. Partial or failed streams are
-reported in the coverage audit and are never treated as evidence of no
-response. After any collection refresh, rerun the combined command so every
-window is based on the same set of complete streams.
+reported in that window's `data/derived/tier2/<window>_days/coverage.csv` and
+are never treated as evidence of no response. After any collection refresh,
+rerun the combined command so every window is based on the same set of
+complete streams.
 
 The completed collection contains review-comment streams for all 70
 repositories and complete issue-comment streams for 68. MovingPandas returned
@@ -214,4 +215,4 @@ repositories and complete issue-comment streams for 68. MovingPandas returned
 comments before GitHub stopped offset pagination for the endpoint, so that
 stream remains explicitly partial. The response analysis excludes both
 repositories rather than treating incomplete comment histories as
-nonresponses. The coverage audit records both exceptions.
+nonresponses. Each Tier 2 coverage table records both exceptions.

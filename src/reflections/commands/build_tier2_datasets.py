@@ -141,7 +141,7 @@ def main() -> int:
         f"Analysis-ready repositories: {issue_ready_count}/{len(cohort)} issues; "
         f"{pr_ready_count}/{len(cohort)} pull requests"
     )
-    print(f"Wrote coverage audit to {args.coverage_output}")
+    print(f"Wrote coverage table to {args.coverage_output}")
     return 0
 
 

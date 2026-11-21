@@ -29,8 +29,9 @@ patterns are distinctive to the pyOpenSci cohort.
 These findings should also be interpreted in light of metric-specific data
 coverage. The current analyses include between 59 and 70 of the 70
 GitHub-hosted repositories, depending on eligibility, snapshot availability,
-and whether a repository has events in the analysis window. Coverage and
-exclusions are documented in the [data coverage audit](data-coverage.md).
+and whether a repository has events in the analysis window. Each result reports
+its metric-specific sample size; Tier 2 exclusions are also recorded in the
+coverage table generated for each analysis window.
 
 ## Cohort profile
 
@@ -106,7 +107,7 @@ direct before-and-after comparison.
 Because data availability and eligibility vary, the number of packages
 contributing to each metric is not always the same. Results are therefore
 presented with metric-specific sample sizes and should be interpreted with the
-coverage audit.
+corresponding coverage information.
 
 ## Early results
 
