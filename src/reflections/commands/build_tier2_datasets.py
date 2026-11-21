@@ -5,12 +5,14 @@ import csv
 import json
 from pathlib import Path
 
-from reflections import (
-    load_history_index,
-    load_interaction_snapshot,
+from reflections.analysis.tier2_tables import (
+    comment_response_rows,
     write_comment_response_csv,
 )
-from reflections.analysis.tier2_tables import comment_response_rows
+from reflections.datasources.github import (
+    load_history_index,
+    load_interaction_snapshot,
+)
 from reflections.workflows import load_cohort, repository_cache_key
 
 COVERAGE_COLUMNS = (

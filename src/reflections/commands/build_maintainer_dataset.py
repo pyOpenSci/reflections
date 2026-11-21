@@ -4,10 +4,10 @@ import argparse
 import sys
 from pathlib import Path
 
-from reflections import (
+from reflections.analysis.maintainer_tables import write_maintainer_csvs
+from reflections.datasources.github import (
     load_maintainer_activity,
     load_maintainer_roster,
-    write_maintainer_csvs,
 )
 
 

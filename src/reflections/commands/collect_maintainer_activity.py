@@ -7,16 +7,16 @@ from pathlib import Path
 
 from github import RateLimitExceededException
 
-from reflections import (
+from reflections._cli import ProgressBar, github_token
+from reflections.datasources.github import (
     collect_maintainer_activity,
+    create_github,
     get_accepted_submissions,
     load_maintainer_activity,
     load_maintainer_roster,
     save_maintainer_activity,
     save_maintainer_roster,
 )
-from reflections._cli import ProgressBar, github_token
-from reflections.datasources.github import create_github
 
 
 def parse_args() -> argparse.Namespace:

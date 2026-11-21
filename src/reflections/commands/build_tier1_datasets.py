@@ -3,11 +3,11 @@
 import argparse
 from pathlib import Path
 
-from reflections import (
-    load_history_index,
+from reflections.analysis.tier1_tables import (
     write_tier1_issue_csv,
     write_tier1_pull_request_csv,
 )
+from reflections.datasources.github import load_history_index
 from reflections.workflows import load_cohort, repository_cache_key
 
 

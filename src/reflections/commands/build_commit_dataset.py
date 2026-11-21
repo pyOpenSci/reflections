@@ -3,7 +3,8 @@
 import argparse
 from pathlib import Path
 
-from reflections import load_commit_snapshot, write_commit_csv
+from reflections.analysis.commit_tables import write_commit_csv
+from reflections.datasources.github import load_commit_snapshot
 
 
 def parse_args() -> argparse.Namespace:

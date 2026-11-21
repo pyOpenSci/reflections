@@ -3,7 +3,8 @@
 import argparse
 from pathlib import Path
 
-from reflections import load_cohort_metadata, write_cohort_csv
+from reflections.analysis.cohort_tables import write_cohort_csv
+from reflections.datasources.github import load_cohort_metadata
 
 
 def parse_args() -> argparse.Namespace:

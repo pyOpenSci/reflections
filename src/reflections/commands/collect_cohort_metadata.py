@@ -7,13 +7,14 @@ from pathlib import Path
 
 from github import GithubException, RateLimitExceededException
 
-from reflections import (
+from reflections._cli import github_token
+from reflections.datasources.github import (
     collect_cohort_metadata,
+    create_github,
     load_cohort_metadata,
+    load_maintainer_roster,
     save_cohort_metadata,
 )
-from reflections._cli import github_token
-from reflections.datasources.github import create_github, load_maintainer_roster
 
 
 def parse_args() -> argparse.Namespace:

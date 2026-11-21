@@ -3,7 +3,8 @@
 import argparse
 from pathlib import Path
 
-from reflections import load_star_snapshot, write_star_csv
+from reflections.analysis.star_tables import write_star_csv
+from reflections.datasources.github import load_star_snapshot
 
 
 def parse_args() -> argparse.Namespace:
