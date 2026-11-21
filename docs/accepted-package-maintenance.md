@@ -352,7 +352,7 @@ item are excluded, as are comments made after the item closed.
 
 This definition is narrower than all maintainer engagement. In particular,
 formal submitted pull-request reviews and issue-management actions such as
-labels or assignments require Tier 3 data. The present metric is therefore
+labels or assignments are not included. The present metric is therefore
 described as *maintainer comment response*, not as the time until an item was
 addressed.
 
@@ -486,7 +486,7 @@ The current results have several important limitations:
   platforms, offline community support, or some forms of project governance.
 - **Each metric captures only part of maintenance.** Default-branch commits do
   not capture all development work; stars are a measure of attention rather
-  than use; and the Tier 2 response measure excludes formal submitted reviews,
+  than use; and the current response measure excludes formal submitted reviews,
   labels, assignments, and other issue-management actions.
 - **Coverage varies by metric and window.** Missing or incomplete snapshots are
   not treated as zero activity. Longer matched windows also exclude more
@@ -513,10 +513,7 @@ Two additions are expected to provide the next major pieces of evidence:
    activity will broaden the analysis beyond repository behavior.
 
 After those data are available, the research questions, cohort definitions,
-and statistical approach will be finalized before results are compared. Tier
-3 GitHub collection—formal pull-request reviews and issue-management
-events—will remain optional unless the comparison or PyPI analyses leave an
-important question about maintainer engagement unresolved.
+and statistical approach will be finalized before results are compared.
 
 ## Reproducibility and reporting
 
