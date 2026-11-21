@@ -172,6 +172,35 @@ The initial Tier 1 cohort run completed indexes for all 70 repositories: 20,058
 issues and 40,251 pull requests. MovingPandas used the audited issues-endpoint
 fallback and returned no historical pull-request records.
 
+Tier 1 figures can be rebuilt for any matched window entirely from these local
+indexes. For example, the 180-day outputs used in the maintenance writeup are
+created with:
+
+```bash
+uv run python scripts/build_tier1_datasets.py \
+  --window-days 180 \
+  --issue-output data/derived/tier1/180_days/issues.csv \
+  --pr-output data/derived/tier1/180_days/pull_requests.csv
+
+uv run python scripts/build_tier1_figures.py \
+  --issues data/derived/tier1/180_days/issues.csv \
+  --pull-requests data/derived/tier1/180_days/pull_requests.csv \
+  --cohort-output figures/cohort/tier1_180_days \
+  --issue-output figures/issues/tier1_180_days \
+  --pr-output figures/pull_requests/tier1_180_days
+```
+
+Repeat those commands with `90` or `365` in the window and output paths to
+rebuild the other comparisons. Once all three windows exist, rebuild the
+cross-window summary table with:
+
+```bash
+uv run python scripts/build_tier1_window_summary.py
+```
+
+These commands make no GitHub API requests. The generated tables and figures
+remain local analysis artifacts rather than version-controlled source files.
+
 The bounded Tier 2 pilot can be run for one repository with:
 
 ```bash

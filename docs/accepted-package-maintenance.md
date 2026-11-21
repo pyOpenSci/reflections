@@ -194,6 +194,100 @@ complexity or composition between periods.
 windows before and after acceptance. Sixty-eight repositories are represented,
 and repositories without issues in a period are shown as zero.*
 
+### Activity declines across 90-, 180-, and 365-day windows
+
+The complete Tier 1 issue and pull-request indexes allow the analysis window
+to be selected locally without querying GitHub again. We repeated the activity
+and close-time summaries using symmetric 90-, 180-, and 365-day periods around
+acceptance. A repository is eligible only when the snapshot provides at least
+the selected number of post-acceptance days. Consequently, longer windows
+contain more events but fewer eligible repositories: 64 at 90 days, 61 at 180
+days, and 53 at 365 days. Repositories with no issues or pull requests in a
+period are retained with a count of zero.
+
+The direction of the activity result is consistent across the three windows.
+Median issue and pull-request counts are lower after acceptance at every window
+length. The larger absolute changes in longer windows are expected in part
+because those windows accumulate more activity; they should not be interpreted
+as evidence that the rate of decline accelerates over time.
+
+| Window | Eligible repositories | Matched issues | Median issues, before → after | Median issue change | Matched PRs | Median PRs, before → after | Median PR change |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 90 days | 64 | 1,085 | 4.0 → 1.5 | −2.0 | 2,693 | 12 → 4 | −4.5 |
+| 180 days | 61 | 2,181 | 11 → 3 | −5.0 | 5,417 | 20 → 7 | −7.0 |
+| 365 days | 53 | 3,709 | 22 → 7 | −10.0 | 7,991 | 42 → 12 | −13.0 |
+
+#### Activity-volume distributions
+
+| 90 days | 180 days | 365 days |
+| --- | --- | --- |
+| ![Issue counts in 90-day windows](../figures/cohort/tier1_90_days/issues_coverage.png) | ![Issue counts in 180-day windows](../figures/cohort/tier1_180_days/issues_coverage.png) | ![Issue counts in 365-day windows](../figures/cohort/tier1_365_days/issues_coverage.png) |
+
+*Figure 8. Repository-level issue-count distributions before and after
+acceptance using 90-, 180-, and 365-day matched windows. Each panel includes
+only repositories with sufficient follow-up for that window; eligible
+repositories without issues in a period are represented by zero.*
+
+| 90 days | 180 days | 365 days |
+| --- | --- | --- |
+| ![Pull-request counts in 90-day windows](../figures/cohort/tier1_90_days/pull_requests_coverage.png) | ![Pull-request counts in 180-day windows](../figures/cohort/tier1_180_days/pull_requests_coverage.png) | ![Pull-request counts in 365-day windows](../figures/cohort/tier1_365_days/pull_requests_coverage.png) |
+
+*Figure 9. Repository-level pull-request-count distributions before and after
+acceptance using 90-, 180-, and 365-day matched windows. The post-acceptance
+distribution remains lower at each window length.*
+
+#### Monthly activity trajectories
+
+| 90 days | 180 days | 365 days |
+| --- | --- | --- |
+| ![Monthly issue activity in 90-day windows](../figures/cohort/tier1_90_days/issues_monthly_activity.png) | ![Monthly issue activity in 180-day windows](../figures/cohort/tier1_180_days/issues_monthly_activity.png) | ![Monthly issue activity in 365-day windows](../figures/cohort/tier1_365_days/issues_monthly_activity.png) |
+
+*Figure 10. Monthly issue activity relative to acceptance across the three
+matched-window lengths. Lines show repository medians, shaded regions show
+interquartile ranges, and the dashed vertical line marks acceptance.*
+
+| 90 days | 180 days | 365 days |
+| --- | --- | --- |
+| ![Monthly pull-request activity in 90-day windows](../figures/cohort/tier1_90_days/pull_requests_monthly_activity.png) | ![Monthly pull-request activity in 180-day windows](../figures/cohort/tier1_180_days/pull_requests_monthly_activity.png) | ![Monthly pull-request activity in 365-day windows](../figures/cohort/tier1_365_days/pull_requests_monthly_activity.png) |
+
+*Figure 11. Monthly pull-request activity relative to acceptance across the
+three matched-window lengths. Zero-event repository-months are retained in the
+monthly distributions.*
+
+Close-time comparisons also point in the same direction across windows, but
+they require more caution. Only repositories with closed events in both
+periods contribute to the paired close-time change. Open events are retained
+in the underlying tables as censored observations but are not included in
+these medians. The set of paired repositories changes with the window length.
+
+| Window | Paired repositories, issue close time | Median issue close-time change | Paired repositories, PR close time | Median PR close-time change |
+| ---: | ---: | ---: | ---: | ---: |
+| 90 days | 31 | +1.31 days | 37 | +0.05 days |
+| 180 days | 42 | +1.84 days | 46 | +0.06 days |
+| 365 days | 39 | +8.36 days | 44 | +0.11 days |
+
+| 90 days | 180 days | 365 days |
+| --- | --- | --- |
+| ![Issue close-time change in 90-day windows](../figures/cohort/tier1_90_days/issues_median_close_change.png) | ![Issue close-time change in 180-day windows](../figures/cohort/tier1_180_days/issues_median_close_change.png) | ![Issue close-time change in 365-day windows](../figures/cohort/tier1_365_days/issues_median_close_change.png) |
+
+*Figure 12. Within-repository changes in median issue close time across the
+three matched-window lengths. Positive values indicate longer observed close
+times after acceptance.*
+
+| 90 days | 180 days | 365 days |
+| --- | --- | --- |
+| ![Pull-request close-time change in 90-day windows](../figures/cohort/tier1_90_days/pull_requests_median_close_change.png) | ![Pull-request close-time change in 180-day windows](../figures/cohort/tier1_180_days/pull_requests_median_close_change.png) | ![Pull-request close-time change in 365-day windows](../figures/cohort/tier1_365_days/pull_requests_median_close_change.png) |
+
+*Figure 13. Within-repository changes in median pull-request close time across
+the three matched-window lengths. The median change is close to zero in all
+three comparisons.*
+
+These window comparisons strengthen the descriptive conclusion that issue and
+pull-request activity is lower after acceptance without disappearing. They do
+not resolve the causal limitations of the study. In addition, results across
+window lengths are not based on an identical cohort because longer follow-up
+requirements exclude more recently accepted packages.
+
 ### Star acquisition slows, while packages retain varied audiences
 
 Star acquisition also generally slows after acceptance. Among the 66
@@ -204,7 +298,7 @@ of continuing external attention to a package.
 
 ![Change in newly acquired stars after acceptance](../figures/cohort/stars_acquisition_change.png)
 
-*Figure 8. Within-repository change in newly acquired stars, calculated as
+*Figure 14. Within-repository change in newly acquired stars, calculated as
 the number after acceptance minus the number before acceptance. Each point is
 a repository; the solid line marks the median change of −3 stars.*
 
@@ -216,7 +310,7 @@ repository-level distributions throughout the analysis.
 
 ![Distribution and ranking of current repository stars](../figures/cohort/stars_current_stargazers.png)
 
-*Figure 9. Current repository stars at the snapshot date. The left panel
+*Figure 15. Current repository stars at the snapshot date. The left panel
 shows the cohort distribution on a logarithmic axis; the right panel shows
 the 15 most-starred repositories.*
 
@@ -231,7 +325,7 @@ packages remain active in public software development.
 
 ![Package-level share of listed maintainers with public activity](../figures/cohort/maintainers_active_share.png)
 
-*Figure 10. Distribution of the share of each package's listed maintainers
+*Figure 16. Distribution of the share of each package's listed maintainers
 with observed public GitHub activity during the 365-day snapshot window.*
 
 Recency provides a more direct view of that activity. Maintainers are grouped
@@ -242,6 +336,6 @@ work and activity on other platforms are not observable through this measure.
 
 ![Recency of listed maintainer public GitHub activity](../figures/cohort/maintainers_activity_recency.png)
 
-*Figure 11. Listed maintainers grouped by the number of days since their most
+*Figure 17. Listed maintainers grouped by the number of days since their most
 recent observed public GitHub contribution. Accounts without observed public
 activity are shown separately.*

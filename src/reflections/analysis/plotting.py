@@ -1,5 +1,6 @@
 """Shared, accessible plotting helpers for cohort analyses."""
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import cmcrameri.cm as cmc
@@ -220,7 +221,11 @@ def plot_period_distribution(
 
 
 def monthly_repository_counts(
-    data: pd.DataFrame, value_column: str | None = None
+    data: pd.DataFrame,
+    value_column: str | None = None,
+    *,
+    repositories: Iterable[str] | None = None,
+    window_days: int | None = None,
 ) -> pd.DataFrame:
     """Count events per repository-month, including zero-event months."""
 
@@ -229,28 +234,40 @@ def monthly_repository_counts(
         activity["days_from_acceptance"] / 30.4375
     ).astype(int)
     indices = []
-    for repository, group in activity.groupby("repository"):
-        requested_window = (
-            float(group["analysis_window_days"].iloc[0])
-            if "analysis_window_days" in group
-            else float(group["snapshot_window_days"].iloc[0])
-            if "snapshot_window_days" in group
-            else 365.0
-        )
-        if {"snapshot_fetched_at", "accepted_at"} <= set(group.columns):
-            post_days = (
-                pd.to_datetime(group["snapshot_fetched_at"].iloc[0], utc=True)
-                - pd.to_datetime(group["accepted_at"].iloc[0], utc=True)
-            ).total_seconds() / 86_400
-            window_days = min(post_days, requested_window)
-        else:
-            window_days = min(
-                requested_window, float(group["days_from_acceptance"].abs().max())
-            )
+    if repositories is not None:
+        if window_days is None or window_days <= 0:
+            raise ValueError("window_days must be positive when repositories are given")
         month_limit = max(0, int(np.floor(window_days / 30.4375)))
         indices.extend(
-            (repository, month) for month in range(-month_limit, month_limit + 1)
+            (repository, month)
+            for repository in repositories
+            for month in range(-month_limit, month_limit + 1)
         )
+    else:
+        for repository, group in activity.groupby("repository"):
+            requested_window = (
+                float(group["analysis_window_days"].iloc[0])
+                if "analysis_window_days" in group
+                else float(group["snapshot_window_days"].iloc[0])
+                if "snapshot_window_days" in group
+                else 365.0
+            )
+            if {"snapshot_fetched_at", "accepted_at"} <= set(group.columns):
+                post_days = (
+                    pd.to_datetime(group["snapshot_fetched_at"].iloc[0], utc=True)
+                    - pd.to_datetime(group["accepted_at"].iloc[0], utc=True)
+                ).total_seconds() / 86_400
+                observed_window = min(post_days, requested_window)
+            else:
+                observed_window = min(
+                    requested_window,
+                    float(group["days_from_acceptance"].abs().max()),
+                )
+            month_limit = max(0, int(np.floor(observed_window / 30.4375)))
+            indices.extend(
+                (repository, month)
+                for month in range(-month_limit, month_limit + 1)
+            )
     index = pd.MultiIndex.from_tuples(indices, names=["repository", "relative_month"])
     grouped = (
         activity.groupby(["repository", "relative_month"])[value_column].sum()
@@ -267,10 +284,17 @@ def plot_monthly_distribution(
     title: str,
     ylabel: str,
     value_column: str | None = None,
+    repositories: Iterable[str] | None = None,
+    window_days: int | None = None,
 ) -> None:
     """Plot monthly cohort medians and interquartile ranges."""
 
-    counts = monthly_repository_counts(data, value_column)
+    counts = monthly_repository_counts(
+        data,
+        value_column,
+        repositories=repositories,
+        window_days=window_days,
+    )
     monthly = counts.groupby("relative_month")["events"].agg(
         median="median",
         lower=lambda x: x.quantile(0.25),

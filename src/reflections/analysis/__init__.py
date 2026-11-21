@@ -17,6 +17,14 @@ from .maintainer_tables import (
 )
 from .star_tables import STAR_COLUMNS, star_rows, write_star_csv
 from .tables import PULL_REQUEST_COLUMNS, pull_request_rows, write_pull_request_csv
+from .tier1_tables import (
+    TIER1_ISSUE_COLUMNS,
+    TIER1_PULL_REQUEST_COLUMNS,
+    tier1_issue_rows,
+    tier1_pull_request_rows,
+    write_tier1_issue_csv,
+    write_tier1_pull_request_csv,
+)
 
 __all__ = [
     "COHORT_COLUMNS",
@@ -27,6 +35,8 @@ __all__ = [
     "PULL_REQUEST_COLUMNS",
     "ROSTER_COLUMNS",
     "STAR_COLUMNS",
+    "TIER1_ISSUE_COLUMNS",
+    "TIER1_PULL_REQUEST_COLUMNS",
     "cohort_rows",
     "commit_rows",
     "interaction_manifest",
@@ -35,6 +45,8 @@ __all__ = [
     "pull_request_rows",
     "roster_rows",
     "star_rows",
+    "tier1_issue_rows",
+    "tier1_pull_request_rows",
     "write_cohort_csv",
     "write_commit_csv",
     "write_interaction_manifest",
@@ -42,4 +54,6 @@ __all__ = [
     "write_maintainer_csvs",
     "write_pull_request_csv",
     "write_star_csv",
+    "write_tier1_issue_csv",
+    "write_tier1_pull_request_csv",
 ]

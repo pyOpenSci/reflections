@@ -7,6 +7,8 @@ from .analysis import (
     write_maintainer_csvs,
     write_pull_request_csv,
     write_star_csv,
+    write_tier1_issue_csv,
+    write_tier1_pull_request_csv,
 )
 from .datasources.github import (
     collect_cohort_metadata,
@@ -86,6 +88,8 @@ __all__ = [
     "write_maintainer_csvs",
     "write_pull_request_csv",
     "write_star_csv",
+    "write_tier1_issue_csv",
+    "write_tier1_pull_request_csv",
 ]
 
 
