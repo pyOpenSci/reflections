@@ -29,5 +29,5 @@ a much lower rate limit. `.env` files are ignored by Git.
 Run the test suite with:
 
 ```console
-uv run python -m unittest discover -s tests -v
+uv run --with pytest pytest -q
 ```

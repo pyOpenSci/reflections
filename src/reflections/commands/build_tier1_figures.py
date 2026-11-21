@@ -1,4 +1,4 @@
-"""Build Tier 1 issue and PR figures from full-history derived tables."""
+"""Internal Tier 1 figure build command."""
 
 import argparse
 from pathlib import Path

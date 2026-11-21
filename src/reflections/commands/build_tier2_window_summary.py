@@ -1,4 +1,4 @@
-"""Summarize Tier 2 comment-response results across matched windows."""
+"""Internal Tier 2 window-summary command."""
 
 import argparse
 from pathlib import Path

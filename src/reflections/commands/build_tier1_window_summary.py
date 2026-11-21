@@ -1,4 +1,4 @@
-"""Summarize Tier 1 results across multiple matched-window lengths."""
+"""Internal Tier 1 window-summary command."""
 
 import argparse
 from pathlib import Path

@@ -1,4 +1,4 @@
-"""Build full-history issue and PR tables from local Tier 1 indexes."""
+"""Internal Tier 1 dataset build command."""
 
 import argparse
 from pathlib import Path

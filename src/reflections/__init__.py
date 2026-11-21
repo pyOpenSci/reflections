@@ -98,4 +98,6 @@ __all__ = [
 
 
 def main() -> None:
-    print("See the reflections README for library and notebook usage.")
+    from ._cli import main as cli_main
+
+    raise SystemExit(cli_main())

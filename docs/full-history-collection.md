@@ -131,24 +131,12 @@ Before each expensive tier, the collector should print:
 6. Run interaction tiers incrementally, rebuilding the coverage audit after
    each quota window.
 
-No cohort-wide full-history collection should begin until the pilot confirms
-the request estimates and checkpoint behavior.
-
-The bounded issue and pull-request index pilot can be run with:
+The pilot established the request estimates and checkpoint behavior. Resume
+cohort collection in bounded batches through the project CLI:
 
 ```bash
-uv run python scripts/collect_history_index.py OWNER/REPOSITORY \
-  --entity both --request-budget 4 --quota-floor 500
-```
-
-The request budget is shared across both indexes. Each completed page is
-written atomically, so rerunning the same command resumes at the next page.
-
-After validating the pilot, cohort collection can proceed in bounded batches:
-
-```bash
-uv run python scripts/collect_cohort_history_indexes.py \
-  --entity both --request-budget 100 --quota-floor 1000
+uv run reflections collect indexes \
+  --request-budget 100 --quota-floor 1000
 ```
 
 The command reads the authoritative local cohort, skips completed indexes and
@@ -172,59 +160,27 @@ The initial Tier 1 cohort run completed indexes for all 70 repositories: 20,058
 issues and 40,251 pull requests. MovingPandas used the audited issues-endpoint
 fallback and returned no historical pull-request records.
 
-Tier 1 figures can be rebuilt for any matched window entirely from these local
-indexes. For example, the 180-day outputs used in the maintenance writeup are
-created with:
+Tier 1 and Tier 2 tables, figures, and cross-window summaries can be rebuilt
+together from the local caches with one command:
 
 ```bash
-uv run python scripts/build_tier1_datasets.py \
-  --window-days 180 \
-  --issue-output data/derived/tier1/180_days/issues.csv \
-  --pr-output data/derived/tier1/180_days/pull_requests.csv
-
-uv run python scripts/build_tier1_figures.py \
-  --issues data/derived/tier1/180_days/issues.csv \
-  --pull-requests data/derived/tier1/180_days/pull_requests.csv \
-  --cohort-output figures/cohort/tier1_180_days \
-  --issue-output figures/issues/tier1_180_days \
-  --pr-output figures/pull_requests/tier1_180_days
+uv run --extra analysis reflections analyze github --windows 90 180 365
 ```
 
-Repeat those commands with `90` or `365` in the window and output paths to
-rebuild the other comparisons. Once all three windows exist, rebuild the
-cross-window summary table with:
-
-```bash
-uv run python scripts/build_tier1_window_summary.py
-```
-
-These commands make no GitHub API requests. The generated tables and figures
+This command makes no GitHub API requests. The generated tables and figures
 remain local analysis artifacts rather than version-controlled source files.
 
-The bounded Tier 2 pilot can be run for one repository with:
+Collection state can be inspected without making requests:
 
 ```bash
-uv run python scripts/collect_interaction_stream.py OWNER/REPOSITORY \
-  --entity both --request-budget 10 --quota-floor 1000
+uv run reflections status
 ```
 
-The request budget is shared across issue comments and review comments. Every
-page is written atomically, and rerunning the command resumes from GitHub's
-stored continuation URL. Rebuild the cohort-level collection inventory with:
+Resume Tier 2 collection in the same bounded manner:
 
 ```bash
-uv run python scripts/build_interaction_manifest.py
-```
-
-This writes `data/derived/interaction_manifest.csv`, with one row for each
-repository and interaction type and an explicit `missing`, `partial`, or
-`complete` state.
-
-After validating the pilot, run cohort collection in bounded batches:
-
-```bash
-uv run python scripts/collect_cohort_interactions.py \
-  --entity both --request-budget 100 --quota-floor 1000
+uv run reflections collect comments \
+  --request-budget 100 --quota-floor 1000
 ```
 
 Completed streams and recorded failures are skipped, while partial streams
@@ -237,7 +193,7 @@ inline review-comment counts, so the review-comment cost cannot be estimated
 from Tier 1; its 70 one-page repository minimum is a lower bound rather than a
 zero-comment estimate.
 
-### Rebuild the Tier 2 response analysis
+### Tier 2 response analysis
 
 The response analysis can be run before collection finishes, but it includes a
 repository only when all interaction streams required for that metric are
@@ -246,37 +202,10 @@ analysis requires complete issue-comment and review-comment streams. Partial or
 failed streams are reported in the coverage audit and are never treated as
 evidence of no response.
 
-Build the 90-day analysis tables with:
-
-```bash
-uv run python scripts/build_tier2_datasets.py \
-  --window-days 90 \
-  --issue-output data/derived/tier2/90_days/issues.csv \
-  --pr-output data/derived/tier2/90_days/pull_requests.csv \
-  --coverage-output data/derived/tier2/90_days/coverage.csv
-```
-
-Then build the summaries and figures:
-
-```bash
-uv run --extra analysis python scripts/build_tier2_figures.py \
-  --issues data/derived/tier2/90_days/issues.csv \
-  --pull-requests data/derived/tier2/90_days/pull_requests.csv \
-  --coverage data/derived/tier2/90_days/coverage.csv \
-  --cohort-output figures/cohort/tier2_90_days \
-  --issue-output figures/issues/tier2_90_days \
-  --pr-output figures/pull_requests/tier2_90_days
-```
-
-Repeat both commands with `180` and `365` in the window and paths. After all
-three builds, create the cross-window comparison with:
-
-```bash
-uv run --extra analysis python scripts/build_tier2_window_summary.py
-```
-
-All of these steps use only the local Tier 1 and Tier 2 caches and make no
-GitHub API requests. After any collection refresh, rerun the commands so every
+The combined analysis command builds the Tier 2 response tables after the Tier
+1 activity tables for every requested window. Partial or failed streams are
+reported in the coverage audit and are never treated as evidence of no
+response. After any collection refresh, rerun the combined command so every
 window is based on the same set of complete streams.
 
 The completed collection contains review-comment streams for all 70

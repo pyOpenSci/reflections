@@ -1,11 +1,16 @@
 import os
+import unittest
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from io import StringIO
-import unittest
 from unittest.mock import patch
 
-from reflections._cli import ProgressBar, github_token
+from reflections._cli import (
+    ProgressBar,
+    _selected_entities,
+    github_analysis_commands,
+    github_token,
+)
 
 
 class GitHubTokenTests(unittest.TestCase):
@@ -45,6 +50,24 @@ class ProgressBarTests(unittest.TestCase):
         self.assertIn("PR 1/2", message)
         self.assertIn("#10", message)
         self.assertIn("quota 4,900", message)
+
+
+class ProjectCommandTests(unittest.TestCase):
+    def test_analysis_command_builds_every_window_and_both_summaries(self):
+        commands = github_analysis_commands([90, 365], response_horizon=14)
+
+        self.assertEqual(len(commands), 10)
+        self.assertIn("data/derived/tier1/90_days/issues.csv", commands[0])
+        self.assertIn("figures/cohort/tier2_365_days", commands[7])
+        self.assertEqual(commands[-1][-1], "14")
+
+    def test_collection_entity_selection_is_validated(self):
+        supported = ("issues", "pull_requests")
+
+        self.assertEqual(_selected_entities(None, supported), supported)
+        self.assertEqual(_selected_entities("issues", supported), ("issues",))
+        with self.assertRaisesRegex(SystemExit, "--entity must be one of"):
+            _selected_entities("review_comments", supported)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""Build censoring-aware Tier 2 maintainer-comment response figures."""
+"""Internal Tier 2 figure build command."""
 
 import argparse
 from pathlib import Path

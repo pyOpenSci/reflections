@@ -1,4 +1,4 @@
-"""Build issue- and PR-level comment-response tables from local Tier 2 data."""
+"""Internal Tier 2 dataset build command."""
 
 import argparse
 import csv
