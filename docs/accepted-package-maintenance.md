@@ -1,21 +1,30 @@
-# Maintenance of pyOpenSci-accepted packages
+# Maintenance patterns among pyOpenSci-accepted packages
 
-> Working draft. This narrative will be developed incrementally as the analysis
-> and data collection mature.
+> **Analysis status:** Working report based on the pyOpenSci cohort and GitHub
+> data collected through November 20, 2026. Results are descriptive and should
+> not be interpreted as causal effects of pyOpenSci review or acceptance. A
+> comparison cohort and PyPI-derived measures will be incorporated in later
+> stages of the study.
 
-## Emerging finding
+## Summary
 
-Across the metrics examined so far, package activity generally decreases
-following pyOpenSci acceptance. Some decrease is expected: preparing a package
-for submission and responding to peer review require concentrated work, making
-the period leading up to acceptance an unusually active phase. By the time a
-package is accepted, it has also been brought into closer alignment with
-pyOpenSci's standards and may require less intensive corrective work. Lower
-post-acceptance activity therefore should not, by itself, be interpreted as a
-loss of maintenance. The observed decline is not precipitous, and substantial
-activity continues after acceptance. Commit, issue, pull-request, star, and
-maintainer activity collectively suggest that accepted packages remain
-actively maintained rather than becoming dormant after review.
+The evidence collected so far shows a consistent descriptive pattern: the
+volume of repository activity generally decreases following pyOpenSci
+acceptance, but activity does not disappear. Some decrease is expected.
+Preparing a package for submission and responding to peer review require
+concentrated work, making the period leading up to acceptance an unusually
+active phase. By the time a package is accepted, it has also been brought into
+closer alignment with pyOpenSci's standards and may require less intensive
+corrective work. Lower post-acceptance activity therefore should not, by
+itself, be interpreted as a loss of maintenance.
+
+The decline is visible in commits, issues, pull requests, and newly acquired
+stars across several matched observation windows. At the same time, most
+repositories continue to receive commits after acceptance, maintainer comment
+responsiveness does not show a comparable decline, and the people listed as
+package maintainers generally remain active on GitHub. Together, these signals
+are more consistent with a reduction in development intensity after an
+unusually active review period than with widespread package abandonment.
 
 We are working from the hypothesis that pyOpenSci review and acceptance may
 contribute to sustained package maintenance. The current analysis cannot test
@@ -33,7 +42,25 @@ and whether a repository has events in the analysis window. Each result reports
 its metric-specific sample size; Tier 2 exclusions are also recorded in the
 coverage table generated for each analysis window.
 
-## Cohort profile
+## Research questions
+
+The current analysis addresses four descriptive questions:
+
+1. How does the volume of package development and community activity change
+   before and after pyOpenSci acceptance?
+2. How does maintainer responsiveness to issues and pull requests change over
+   the same periods?
+3. What do current repository and maintainer signals indicate about continued
+   package maintenance?
+4. Are the observed before-and-after patterns consistent across 90-, 180-, and
+   365-day analysis windows?
+
+These questions characterize the pyOpenSci cohort. They do not determine
+whether pyOpenSci participation caused the observed patterns. That question
+requires an appropriate comparison cohort and a design that accounts for
+differences in package age, maturity, visibility, and maintainer capacity.
+
+## Study cohort
 
 As of November 20, 2026, the collected cohort contains 71 packages accepted
 by pyOpenSci. Seventy are hosted on GitHub and form the analytic cohort for
@@ -87,7 +114,7 @@ default branch, measured at the cohort metadata snapshot. The vertical line
 marks the cohort median of 1.85 months. All 70 GitHub-hosted repositories had
 an available default-branch commit timestamp.*
 
-## Cohort and comparison
+## Data and analytical approach
 
 The study cohort consists of packages accepted into pyOpenSci through its
 peer-review process. For each package, the acceptance date serves as the
@@ -109,7 +136,23 @@ contributing to each metric is not always the same. Results are therefore
 presented with metric-specific sample sizes and should be interpreted with the
 corresponding coverage information.
 
-## Early results
+The GitHub analysis combines several locally cached data products: pyOpenSci
+submission and acceptance records; repository metadata; default-branch commit
+histories; complete issue and pull-request indexes; issue and pull-request
+comment streams; stargazer timestamps; and public activity snapshots for
+listed maintainers. Caching these records makes the analysis reproducible
+without repeatedly querying the GitHub API and allows matched windows to be
+changed locally.
+
+Repositories are the primary unit of comparison. Cohort summaries emphasize
+medians, interquartile ranges, within-repository changes, and the underlying
+repository-level distributions because activity varies substantially across
+packages. No null-hypothesis significance tests are used in this descriptive
+stage. Items without an observed maintainer response are handled as censored
+observations in cumulative-response estimates rather than being treated as
+permanent nonresponses.
+
+## Results
 
 ### Commit activity decreases but generally continues
 
@@ -424,3 +467,63 @@ work and activity on other platforms are not observable through this measure.
 *Figure 19. Listed maintainers grouped by the number of days since their most
 recent observed public GitHub contribution. Accounts without observed public
 activity are shown separately.*
+
+## Limitations
+
+The current results have several important limitations:
+
+- **The analysis is descriptive, not causal.** Packages are compared with
+  themselves before and after acceptance, but there is not yet a comparison
+  group. Changes may reflect package maturation, broader ecosystem trends,
+  maintainer capacity, or regression from the concentrated activity associated
+  with preparing for and completing review.
+- **The cohort is selected.** Packages that pursue and complete pyOpenSci
+  review may differ systematically from other open-source scientific packages.
+  The results describe accepted packages and should not be generalized to all
+  scientific Python software.
+- **GitHub is an incomplete view of maintenance.** The analysis excludes one
+  GitLab-hosted package and cannot observe private work, discussions on other
+  platforms, offline community support, or some forms of project governance.
+- **Each metric captures only part of maintenance.** Default-branch commits do
+  not capture all development work; stars are a measure of attention rather
+  than use; and the Tier 2 response measure excludes formal submitted reviews,
+  labels, assignments, and other issue-management actions.
+- **Coverage varies by metric and window.** Missing or incomplete snapshots are
+  not treated as zero activity. Longer matched windows also exclude more
+  recently accepted packages, so results across windows do not represent an
+  identical set of repositories.
+- **Maintainer rosters are historical records.** The listed maintainers come
+  from available submission records and may not reflect later changes in
+  project membership or responsibility.
+
+These limitations do not invalidate the observed activity and response
+patterns, but they constrain the conclusions that can be drawn from them.
+
+## Planned extensions
+
+Two additions are expected to provide the next major pieces of evidence:
+
+1. **A comparison cohort of GitHub repositories.** Accepted packages will be
+   compared with packages that did not undergo pyOpenSci review. The matching
+   strategy will need to account for factors such as package age, repository
+   activity, visibility, scientific domain, and maintainer-team size before a
+   comparative analysis is specified.
+2. **PyPI-derived package measures.** Release history, supported Python
+   versions, and available measures of package installation or download
+   activity will broaden the analysis beyond repository behavior.
+
+After those data are available, the research questions, cohort definitions,
+and statistical approach will be finalized before results are compared. Tier
+3 GitHub collection—formal pull-request reviews and issue-management
+events—will remain optional unless the comparison or PyPI analyses leave an
+important question about maintainer engagement unresolved.
+
+## Reproducibility and reporting
+
+All reported GitHub measures are produced from cached snapshots and generated
+analysis tables. Figures are outputs of the repository's analysis commands
+rather than manually edited illustrations. Before external circulation, this
+report should record a frozen data-snapshot date, the exact analytic cohort,
+software version or commit, and a table linking every reported quantity to its
+generated source file. That provenance will also support the methods and data
+availability sections of a future peer-reviewed article.
