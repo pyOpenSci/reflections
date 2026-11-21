@@ -236,3 +236,45 @@ conversation comments across the cohort. The PR list endpoint does not supply
 inline review-comment counts, so the review-comment cost cannot be estimated
 from Tier 1; its 70 one-page repository minimum is a lower bound rather than a
 zero-comment estimate.
+
+### Rebuild the Tier 2 response analysis
+
+The response analysis can be run before collection finishes, but it includes a
+repository only when all interaction streams required for that metric are
+complete. Issue analysis requires a complete issue-comment stream. Pull-request
+analysis requires complete issue-comment and review-comment streams. Partial or
+failed streams are reported in the coverage audit and are never treated as
+evidence of no response.
+
+Build the 90-day analysis tables with:
+
+```bash
+uv run python scripts/build_tier2_datasets.py \
+  --window-days 90 \
+  --issue-output data/derived/tier2/90_days/issues.csv \
+  --pr-output data/derived/tier2/90_days/pull_requests.csv \
+  --coverage-output data/derived/tier2/90_days/coverage.csv
+```
+
+Then build the summaries and figures:
+
+```bash
+uv run --extra analysis python scripts/build_tier2_figures.py \
+  --issues data/derived/tier2/90_days/issues.csv \
+  --pull-requests data/derived/tier2/90_days/pull_requests.csv \
+  --coverage data/derived/tier2/90_days/coverage.csv \
+  --cohort-output figures/cohort/tier2_90_days \
+  --issue-output figures/issues/tier2_90_days \
+  --pr-output figures/pull_requests/tier2_90_days
+```
+
+Repeat both commands with `180` and `365` in the window and paths. After all
+three builds, create the cross-window comparison with:
+
+```bash
+uv run --extra analysis python scripts/build_tier2_window_summary.py
+```
+
+All of these steps use only the local Tier 1 and Tier 2 caches and make no
+GitHub API requests. When collection finishes, rerun the commands so every
+window is based on the same final set of complete streams.

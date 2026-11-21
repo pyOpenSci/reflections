@@ -1,7 +1,9 @@
 """Tools for reflecting on pyOpenSci package maintenance and adoption."""
 
 from .analysis import (
+    CommentResponsePolicy,
     write_cohort_csv,
+    write_comment_response_csv,
     write_commit_csv,
     write_issue_csv,
     write_maintainer_csvs,
@@ -49,6 +51,7 @@ from .metrics import (
 )
 
 __all__ = [
+    "CommentResponsePolicy",
     "IssueResponsePolicy",
     "IssueTiming",
     "MaintainerResponsePolicy",
@@ -83,6 +86,7 @@ __all__ = [
     "save_snapshot",
     "save_star_snapshot",
     "write_cohort_csv",
+    "write_comment_response_csv",
     "write_commit_csv",
     "write_issue_csv",
     "write_maintainer_csvs",

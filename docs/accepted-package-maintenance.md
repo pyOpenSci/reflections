@@ -288,6 +288,61 @@ not resolve the causal limitations of the study. In addition, results across
 window lengths are not based on an identical cohort because longer follow-up
 requirements exclude more recently accepted packages.
 
+### Maintainer comment response: analysis prepared, collection in progress
+
+> **Provisional analysis:** Tier 2 interaction collection is still running.
+> The figures in this section include only repositories whose required comment
+> streams were complete at the most recent local rebuild. They demonstrate the
+> analysis and should not yet be interpreted as final cohort results.
+
+Tier 2 adds the timing and authorship of repository-wide comments to the Tier 1
+issue and pull-request indexes. For issues, the response metric is the first
+qualifying maintainer conversation comment. For pull requests, it is the first
+qualifying conversation comment or inline review comment. A qualifying comment
+must be associated with an owner, organization member, or repository
+collaborator. Automated accounts and comments made by the person who opened the
+item are excluded, as are comments made after the item closed.
+
+This definition is narrower than all maintainer engagement. In particular,
+formal submitted pull-request reviews and issue-management actions such as
+labels or assignments require Tier 3 data. The present metric is therefore
+described as *maintainer comment response*, not as the time until an item was
+addressed.
+
+Items without an observed qualifying comment are retained as censored
+observations until closure or the common snapshot cutoff. Cumulative-response
+curves use the complement of a Kaplan–Meier estimate so that short observed
+follow-up is not silently treated as permanent nonresponse. The complementary
+30-day repository summaries include an item only if it received a response by
+30 days or was observable for at least 30 days. Median and mean response-time
+summaries are conditional on an observed qualifying comment and consequently
+answer a different question from the censoring-aware curves.
+
+| Issue response curve | Issue-level 30-day response rates |
+| --- | --- |
+| ![Cumulative maintainer-comment response for issues](../figures/cohort/tier2_90_days/issues_cumulative_comment_response.png) | ![Thirty-day maintainer-comment response rates for issues](../figures/cohort/tier2_90_days/issues_comment_response_rate_30_days.png) |
+
+*Figure 14. Provisional issue comment-response results in matched 90-day
+windows. The left panel estimates cumulative response while accounting for
+censoring; the right panel shows repository-level 30-day response rates among
+assessable issues. These panels must be rebuilt after collection completes.*
+
+| Pull-request response curve | Pull-request-level 30-day response rates |
+| --- | --- |
+| ![Cumulative maintainer-comment response for pull requests](../figures/cohort/tier2_90_days/pull_requests_cumulative_comment_response.png) | ![Thirty-day maintainer-comment response rates for pull requests](../figures/cohort/tier2_90_days/pull_requests_comment_response_rate_30_days.png) |
+
+*Figure 15. Provisional pull-request comment-response results in matched
+90-day windows. Conversation and inline review comments are included, but
+formal submitted reviews are not. These panels must be rebuilt after
+collection completes.*
+
+The final analysis will repeat these summaries for 180- and 365-day matched
+windows and report the number of complete repositories, matched items,
+assessable items, observed responses, and paired repositories for every
+comparison. As with the activity results, the before-and-after patterns will
+remain descriptive and will not be interpreted as effects caused by pyOpenSci
+acceptance.
+
 ### Star acquisition slows, while packages retain varied audiences
 
 Star acquisition also generally slows after acceptance. Among the 66
@@ -298,7 +353,7 @@ of continuing external attention to a package.
 
 ![Change in newly acquired stars after acceptance](../figures/cohort/stars_acquisition_change.png)
 
-*Figure 14. Within-repository change in newly acquired stars, calculated as
+*Figure 16. Within-repository change in newly acquired stars, calculated as
 the number after acceptance minus the number before acceptance. Each point is
 a repository; the solid line marks the median change of −3 stars.*
 
@@ -310,7 +365,7 @@ repository-level distributions throughout the analysis.
 
 ![Distribution and ranking of current repository stars](../figures/cohort/stars_current_stargazers.png)
 
-*Figure 15. Current repository stars at the snapshot date. The left panel
+*Figure 17. Current repository stars at the snapshot date. The left panel
 shows the cohort distribution on a logarithmic axis; the right panel shows
 the 15 most-starred repositories.*
 
@@ -325,7 +380,7 @@ packages remain active in public software development.
 
 ![Package-level share of listed maintainers with public activity](../figures/cohort/maintainers_active_share.png)
 
-*Figure 16. Distribution of the share of each package's listed maintainers
+*Figure 18. Distribution of the share of each package's listed maintainers
 with observed public GitHub activity during the 365-day snapshot window.*
 
 Recency provides a more direct view of that activity. Maintainers are grouped
@@ -336,6 +391,6 @@ work and activity on other platforms are not observable through this measure.
 
 ![Recency of listed maintainer public GitHub activity](../figures/cohort/maintainers_activity_recency.png)
 
-*Figure 17. Listed maintainers grouped by the number of days since their most
+*Figure 19. Listed maintainers grouped by the number of days since their most
 recent observed public GitHub contribution. Accounts without observed public
 activity are shown separately.*

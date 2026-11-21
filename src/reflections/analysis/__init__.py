@@ -25,6 +25,13 @@ from .tier1_tables import (
     write_tier1_issue_csv,
     write_tier1_pull_request_csv,
 )
+from .tier2_tables import (
+    TIER2_RESPONSE_COLUMNS,
+    CommentResponsePolicy,
+    comment_response_rows,
+    cumulative_response_curve,
+    write_comment_response_csv,
+)
 
 __all__ = [
     "COHORT_COLUMNS",
@@ -37,8 +44,12 @@ __all__ = [
     "STAR_COLUMNS",
     "TIER1_ISSUE_COLUMNS",
     "TIER1_PULL_REQUEST_COLUMNS",
+    "TIER2_RESPONSE_COLUMNS",
+    "CommentResponsePolicy",
     "cohort_rows",
+    "comment_response_rows",
     "commit_rows",
+    "cumulative_response_curve",
     "interaction_manifest",
     "issue_rows",
     "maintainer_rows",
@@ -48,6 +59,7 @@ __all__ = [
     "tier1_issue_rows",
     "tier1_pull_request_rows",
     "write_cohort_csv",
+    "write_comment_response_csv",
     "write_commit_csv",
     "write_interaction_manifest",
     "write_issue_csv",
