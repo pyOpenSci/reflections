@@ -2,6 +2,11 @@
 
 from .cohort_tables import COHORT_COLUMNS, cohort_rows, write_cohort_csv
 from .commit_tables import COMMIT_COLUMNS, commit_rows, write_commit_csv
+from .interaction_manifest import (
+    INTERACTION_TYPES,
+    interaction_manifest,
+    write_interaction_manifest,
+)
 from .issue_tables import ISSUE_COLUMNS, issue_rows, write_issue_csv
 from .maintainer_tables import (
     MAINTAINER_COLUMNS,
@@ -16,6 +21,7 @@ from .tables import PULL_REQUEST_COLUMNS, pull_request_rows, write_pull_request_
 __all__ = [
     "COHORT_COLUMNS",
     "COMMIT_COLUMNS",
+    "INTERACTION_TYPES",
     "ISSUE_COLUMNS",
     "MAINTAINER_COLUMNS",
     "PULL_REQUEST_COLUMNS",
@@ -23,6 +29,7 @@ __all__ = [
     "STAR_COLUMNS",
     "cohort_rows",
     "commit_rows",
+    "interaction_manifest",
     "issue_rows",
     "maintainer_rows",
     "pull_request_rows",
@@ -30,6 +37,7 @@ __all__ = [
     "star_rows",
     "write_cohort_csv",
     "write_commit_csv",
+    "write_interaction_manifest",
     "write_issue_csv",
     "write_maintainer_csvs",
     "write_pull_request_csv",

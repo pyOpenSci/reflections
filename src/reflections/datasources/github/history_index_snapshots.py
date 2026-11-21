@@ -28,8 +28,8 @@ def load_history_index(path: str | Path) -> HistoryIndexSnapshot:
     """Load a history-index snapshot."""
 
     data = json.loads(Path(path).read_text(encoding="utf-8"))
-    if data.get("schema_version") not in SUPPORTED_SCHEMA_VERSIONS:
-        version = data.get("schema_version")
+    version = data.get("schema_version")
+    if version not in SUPPORTED_SCHEMA_VERSIONS:
         raise ValueError(f"Unsupported history index schema: {version}")
     return HistoryIndexSnapshot(
         schema_version=SCHEMA_VERSION,
@@ -42,7 +42,15 @@ def load_history_index(path: str | Path) -> HistoryIndexSnapshot:
         complete=data["complete"],
         requests_used=data["requests_used"],
         rate_remaining=data["rate_remaining"],
-        records=tuple(_record_from_dict(item) for item in data["records"]),
+        records=tuple(
+            _record_from_dict(
+                item,
+                legacy_review_count=(
+                    version == 1 and data["entity_type"] == "pull_requests"
+                ),
+            )
+            for item in data["records"]
+        ),
     )
 
 
@@ -78,7 +86,11 @@ def _to_dict(snapshot: HistoryIndexSnapshot) -> dict:
     }
 
 
-def _record_from_dict(data: dict) -> HistoryIndexRecord:
+def _record_from_dict(
+    data: dict,
+    *,
+    legacy_review_count: bool = False,
+) -> HistoryIndexRecord:
     return HistoryIndexRecord(
         number=data["number"],
         title=data["title"],
@@ -90,7 +102,9 @@ def _record_from_dict(data: dict) -> HistoryIndexRecord:
         merged_at=_parse_optional_datetime(data["merged_at"]),
         state=data["state"],
         comment_count=data["comment_count"],
-        review_comment_count=data["review_comment_count"],
+        review_comment_count=(
+            None if legacy_review_count else data["review_comment_count"]
+        ),
         is_draft=data["is_draft"],
     )
 

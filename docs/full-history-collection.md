@@ -50,6 +50,15 @@ Collect repository-wide issue comments and pull-request review comments where
 GitHub provides bulk endpoints. Associate comments with their issue or pull
 request locally. This avoids making an empty comments request for every item.
 
+The issue-comment endpoint contains conversation comments from both issues and
+pull requests. Each cached record therefore stores its parent number, and the
+Tier 1 indexes determine whether that number belongs to an issue or a pull
+request. Comment bodies are not retained. The cache includes only stable IDs,
+parent numbers, interaction kind, author and association, timestamps, and URL.
+
+Formal pull-request review submissions are not part of the bulk review-comment
+stream and remain a Tier 3 collection.
+
 ### Tier 3: per-item details
 
 Collect information that has no adequate bulk endpoint, including formal pull
@@ -162,3 +171,39 @@ count, remain null rather than being interpreted as false or zero.
 The initial Tier 1 cohort run completed indexes for all 70 repositories: 20,058
 issues and 40,251 pull requests. MovingPandas used the audited issues-endpoint
 fallback and returned no historical pull-request records.
+
+The bounded Tier 2 pilot can be run for one repository with:
+
+```bash
+uv run python scripts/collect_interaction_stream.py OWNER/REPOSITORY \
+  --entity both --request-budget 10 --quota-floor 1000
+```
+
+The request budget is shared across issue comments and review comments. Every
+page is written atomically, and rerunning the command resumes from GitHub's
+stored continuation URL. Rebuild the cohort-level collection inventory with:
+
+```bash
+uv run python scripts/build_interaction_manifest.py
+```
+
+This writes `data/derived/interaction_manifest.csv`, with one row for each
+repository and interaction type and an explicit `missing`, `partial`, or
+`complete` state.
+
+After validating the pilot, run cohort collection in bounded batches:
+
+```bash
+uv run python scripts/collect_cohort_interactions.py \
+  --entity both --request-budget 100 --quota-floor 1000
+```
+
+Completed streams and recorded failures are skipped, while partial streams
+resume from their stored continuation URL. Use `--retry-failures` only after
+investigating the recorded API error.
+
+Tier 1 comment counts indicate approximately 849 pages of issue and PR
+conversation comments across the cohort. The PR list endpoint does not supply
+inline review-comment counts, so the review-comment cost cannot be estimated
+from Tier 1; its 70 one-page repository minimum is a lower bound rather than a
+zero-comment estimate.

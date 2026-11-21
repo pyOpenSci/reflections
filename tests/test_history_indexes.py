@@ -190,3 +190,23 @@ def test_history_index_manifest_records_fallback_source(tmp_path):
     ].iloc[0]
 
     assert pull_request["source_endpoint"] == "issues"
+
+
+def test_version_one_pr_snapshot_treats_missing_review_count_as_unknown(tmp_path):
+    complete = collect_history_index(
+        "org/project",
+        "pull_requests",
+        github=FakeGithub([({}, [issue(1) | {"review_comments": 0}])]),
+        request_budget=1,
+        quota_floor=500,
+    )
+    path = save_history_index(complete, tmp_path / "pulls.json")
+    data = json.loads(path.read_text())
+    data["schema_version"] = 1
+    data.pop("next_url")
+    data.pop("source_endpoint")
+    path.write_text(json.dumps(data))
+
+    migrated = load_history_index(path)
+
+    assert migrated.records[0].review_comment_count is None

@@ -180,6 +180,36 @@ class HistoryIndexSnapshot:
 
 
 @dataclass(frozen=True)
+class InteractionRecord:
+    """A repository-wide issue or pull-request comment."""
+
+    id: int
+    parent_number: int
+    kind: str
+    url: str
+    author_login: str | None
+    author_association: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass(frozen=True)
+class InteractionSnapshot:
+    """A page-checkpointed repository-wide interaction stream."""
+
+    repository: str
+    interaction_type: str
+    fetched_at: datetime
+    records: tuple[InteractionRecord, ...] = field(default_factory=tuple)
+    next_page: int = 1
+    next_url: str | None = None
+    complete: bool = False
+    requests_used: int = 0
+    rate_remaining: int | None = None
+    schema_version: int = 1
+
+
+@dataclass(frozen=True)
 class StarHistoryWeek:
     """Daily star acquisitions for one GitHub calendar week."""
 

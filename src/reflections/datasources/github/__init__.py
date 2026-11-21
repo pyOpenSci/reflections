@@ -17,6 +17,11 @@ from .commit_snapshots import load_commit_snapshot, save_commit_snapshot
 from .commits import collect_commit_snapshot
 from .history_index_snapshots import load_history_index, save_history_index
 from .history_indexes import collect_history_index
+from .interaction_snapshots import (
+    load_interaction_snapshot,
+    save_interaction_snapshot,
+)
+from .interactions import collect_interaction_stream
 from .issue_snapshots import load_issue_snapshot, save_issue_snapshot
 from .issues import collect_issue_snapshot
 from .maintainer_snapshots import (
@@ -32,6 +37,8 @@ from .models import (
     CommitSnapshot,
     HistoryIndexRecord,
     HistoryIndexSnapshot,
+    InteractionRecord,
+    InteractionSnapshot,
     IssueEvent,
     IssueRecord,
     IssueSnapshot,
@@ -55,6 +62,8 @@ __all__ = [
     "CommitSnapshot",
     "HistoryIndexRecord",
     "HistoryIndexSnapshot",
+    "InteractionRecord",
+    "InteractionSnapshot",
     "IssueEvent",
     "IssueRecord",
     "IssueSnapshot",
@@ -72,8 +81,9 @@ __all__ = [
     "UnsupportedRepositoryWarning",
     "collect_cohort_metadata",
     "collect_commit_snapshot",
-    "collect_issue_snapshot",
     "collect_history_index",
+    "collect_interaction_stream",
+    "collect_issue_snapshot",
     "collect_maintainer_activity",
     "collect_repository_snapshot",
     "collect_star_snapshot",
@@ -82,16 +92,18 @@ __all__ = [
     "get_submission",
     "load_cohort_metadata",
     "load_commit_snapshot",
-    "load_issue_snapshot",
     "load_history_index",
+    "load_interaction_snapshot",
+    "load_issue_snapshot",
     "load_maintainer_activity",
     "load_maintainer_roster",
     "load_snapshot",
     "load_star_snapshot",
     "save_cohort_metadata",
     "save_commit_snapshot",
-    "save_issue_snapshot",
     "save_history_index",
+    "save_interaction_snapshot",
+    "save_issue_snapshot",
     "save_maintainer_activity",
     "save_maintainer_roster",
     "save_snapshot",
