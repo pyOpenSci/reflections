@@ -288,12 +288,13 @@ not resolve the causal limitations of the study. In addition, results across
 window lengths are not based on an identical cohort because longer follow-up
 requirements exclude more recently accepted packages.
 
-### Maintainer comment response: analysis prepared, collection in progress
+### Maintainer responsiveness remains broadly stable as activity declines
 
-> **Provisional analysis:** Tier 2 interaction collection is still running.
-> The figures in this section include only repositories whose required comment
-> streams were complete at the most recent local rebuild. They demonstrate the
-> analysis and should not yet be interpreted as final cohort results.
+> **Interim analysis:** Tier 2 interaction collection is still running. The
+> current rebuild includes 55 of 70 repositories with complete streams for
+> both issue and pull-request analysis; 52 of those repositories have enough
+> follow-up for the 365-day comparison. The remaining repositories could still
+> change these estimates.
 
 Tier 2 adds the timing and authorship of repository-wide comments to the Tier 1
 issue and pull-request indexes. For issues, the response metric is the first
@@ -318,30 +319,56 @@ follow-up is not silently treated as permanent nonresponse. The complementary
 summaries are conditional on an observed qualifying comment and consequently
 answer a different question from the censoring-aware curves.
 
+Across the substantially expanded Tier 2 sample, the probability of receiving
+a qualifying maintainer comment within 30 days does not decline alongside the
+lower volume of issues and pull requests. The estimated issue response is
+higher after acceptance at all three window lengths, with differences of about
+seven to eight percentage points. Pull-request response is modestly higher in
+the 90- and 180-day comparisons and modestly lower in the 365-day comparison.
+The long-window pull-request difference is less than two percentage points and
+does not support a large change in either direction.
+
+| Window | Eligible repositories | Matched issues | Issue response, before → after | Matched PRs | PR response, before → after |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 90 days | 55 | 883 | 36.8% → 43.9% | 1,966 | 48.3% → 51.6% |
+| 180 days | 55 | 1,854 | 34.9% → 43.3% | 4,074 | 50.2% → 53.4% |
+| 365 days | 52 | 3,709 | 34.7% → 41.6% | 7,991 | 56.1% → 54.2% |
+
+Response speed among items with an observed qualifying comment is also
+stable. Across the three window lengths, the median within-repository change
+in response time ranges from approximately 0.04 days faster to 0.35 days
+slower for issues, and from 0.53 days faster to effectively unchanged for pull
+requests. These conditional response-time summaries should not be interpreted
+separately from response probability because they exclude items without an
+observed qualifying comment.
+
 | Issue response curve | Issue-level 30-day response rates |
 | --- | --- |
 | ![Cumulative maintainer-comment response for issues](../figures/cohort/tier2_90_days/issues_cumulative_comment_response.png) | ![Thirty-day maintainer-comment response rates for issues](../figures/cohort/tier2_90_days/issues_comment_response_rate_30_days.png) |
 
-*Figure 14. Provisional issue comment-response results in matched 90-day
+*Figure 14. Interim issue comment-response results in matched 90-day
 windows. The left panel estimates cumulative response while accounting for
 censoring; the right panel shows repository-level 30-day response rates among
-assessable issues. These panels must be rebuilt after collection completes.*
+assessable issues. Only repositories with complete issue-comment streams are
+included.*
 
 | Pull-request response curve | Pull-request-level 30-day response rates |
 | --- | --- |
 | ![Cumulative maintainer-comment response for pull requests](../figures/cohort/tier2_90_days/pull_requests_cumulative_comment_response.png) | ![Thirty-day maintainer-comment response rates for pull requests](../figures/cohort/tier2_90_days/pull_requests_comment_response_rate_30_days.png) |
 
-*Figure 15. Provisional pull-request comment-response results in matched
+*Figure 15. Interim pull-request comment-response results in matched
 90-day windows. Conversation and inline review comments are included, but
-formal submitted reviews are not. These panels must be rebuilt after
-collection completes.*
+formal submitted reviews are not. Only repositories with both required
+comment streams complete are included.*
 
-The final analysis will repeat these summaries for 180- and 365-day matched
-windows and report the number of complete repositories, matched items,
-assessable items, observed responses, and paired repositories for every
-comparison. As with the activity results, the before-and-after patterns will
-remain descriptive and will not be interpreted as effects caused by pyOpenSci
-acceptance.
+Taken together, these results distinguish maintenance intensity from
+maintainer responsiveness. Fewer issues and pull requests are opened after
+acceptance, but the available evidence does not show a corresponding collapse
+in engagement with the items that are opened. Issue-comment response is
+consistently higher after acceptance, while pull-request response is broadly
+comparable before and after acceptance. As with the activity results, these
+before-and-after patterns remain descriptive and should not be interpreted as
+effects caused by pyOpenSci acceptance.
 
 ### Star acquisition slows, while packages retain varied audiences
 
