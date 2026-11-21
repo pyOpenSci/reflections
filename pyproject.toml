@@ -5,6 +5,8 @@ description = "A pyOpenSci project for reflecting on package status (PoC)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "packaging>=26.3",
+    "pandas>=3.1.1",
     "pygithub>=2.10.0",
 ]
 
@@ -12,7 +14,6 @@ dependencies = [
 analysis = [
     "cmcrameri>=1.9",
     "matplotlib>=3.11.2",
-    "pandas>=3.1.1",
 ]
 
 [project.scripts]

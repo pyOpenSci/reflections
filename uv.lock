@@ -1254,6 +1254,8 @@ name = "reflections"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "packaging" },
+    { name = "pandas" },
     { name = "pygithub" },
 ]
 
@@ -1261,14 +1263,14 @@ dependencies = [
 analysis = [
     { name = "cmcrameri" },
     { name = "matplotlib" },
-    { name = "pandas" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "cmcrameri", marker = "extra == 'analysis'", specifier = ">=1.9" },
     { name = "matplotlib", marker = "extra == 'analysis'", specifier = ">=3.11.2" },
-    { name = "pandas", marker = "extra == 'analysis'", specifier = ">=3.1.1" },
+    { name = "packaging", specifier = ">=26.3" },
+    { name = "pandas", specifier = ">=3.1.1" },
     { name = "pygithub", specifier = ">=2.10.0" },
 ]
 provides-extras = ["analysis"]
