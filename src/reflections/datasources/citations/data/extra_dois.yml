@@ -1,0 +1,65 @@
+# DOIs curated by hand (mostly from README citation sections), keyed by
+# package_name in pyOpenSci's packages.yml. Merged into fetch_package_dois()
+# after packages.yml and CITATION.cff.
+#
+# zenodo_doi / joss_doi fill the package's slot if it's empty.
+# other_dois entries are added unless already present. Set "use: false" to
+# keep an entry on record without counting it.
+
+nsEVDx:
+  joss_doi: "10.21105/joss.11187"
+
+THzTools:
+  other_dois:
+    - doi: "10.1364/oe.417724"
+      note: Optics Express methods paper
+
+PyPartMC:
+  other_dois:
+    - doi: "10.1029/2008jd011073"
+      note: Suggested methods paper
+
+AMS:
+  other_dois:
+    - doi: "10.1109/tste.2025.3528027"
+      note: Suggested citation
+
+martini:
+  other_dois:
+    - doi: "10.1093/mnras/sty2687"
+      note: Original paper the README asks users to cite
+
+SLEPLET:
+  other_dois:
+    - doi: "10.1109/tsp.2011.2166394"
+      note: >-
+        SSHT sampling theorem (McEwen & Wiaux). Methods citation; no shared
+        authors, but from the same research group (astro-informatics)
+      use: false
+    - doi: "10.1145/3134472.3134497"
+      note: libigl (Jacobson & Panozzo). Methods citation; no shared authors
+      use: false
+
+Physcraper:
+  other_dois:
+    - doi: "10.1186/s12859-021-04274-6"
+      note: Software paper (BMC Bioinformatics)
+    - doi: "10.5281/zenodo.3937741"
+      note: >-
+        Open Tree of Life Synthetic Tree dataset the method builds on. A
+        separate Zenodo record, not a Physcraper release
+
+phenopype:
+  other_dois:
+    - doi: "10.1111/2041-210x.13771"
+      note: Python pipeline paper (Methods in Ecology and Evolution)
+
+Fluidimage:
+  # Repo is on Heptapod, not GitHub, so CITATION.cff and the README aren't
+  # read automatically.
+  zenodo_doi: "10.5281/zenodo.11359207"
+  other_dois:
+    - doi: "10.5334/jors.237"
+      note: >-
+        FluidDyn metapaper (JORS 2019) the README asks users to cite. Covers the
+        whole FluidDyn project (fluidsim, fluidfft, ...), not just Fluidimage
